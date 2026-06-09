@@ -1,25 +1,68 @@
+import sys
+import subprocess
+
+# Reconfigure stdout/stderr to UTF-8 to prevent Unicode encoding issues (for emojis) on Windows Terminal
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except:
+        pass
+if hasattr(sys.stderr, 'reconfigure'):
+    try:
+        sys.stderr.reconfigure(encoding='utf-8')
+    except:
+        pass
+
+def check_and_install_dependencies():
+    import importlib
+    required = {
+        "mysql.connector": "mysql-connector-python",
+        "google.generativeai": "google-generativeai",
+        "colorama": "colorama"
+    }
+    for module, package in required.items():
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            print(f"[BOOT] Package '{package}' is missing. Installing...")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+                print(f"[BOOT] Successfully installed '{package}'.")
+            except Exception as e:
+                print(f"[BOOT ERROR] Failed to auto-install '{package}': {e}")
+                print(f"👉 Please run manually: pip install {package} (or pip install -r requirements.txt)")
+                sys.exit(1)
+
+# Check dependencies before executing imports that rely on them
+check_and_install_dependencies()
+
 import time
 import argparse
+from colorama import init, Fore, Back, Style
+
+# Initialize colorama for colored terminal logs (cross-platform)
+init(autoreset=True)
+
 from db import fetch_active_keywords, save_scraped_post, save_lead, update_keyword_scraped_time
 from scraper import simulate_platform_scrape
 from advisor import qualify_and_draft
 
 def run_agent_loop(single_run=False):
-    print("==========================================================")
-    print("     LAKSHYA AI AGENT RUNNER - BACKGROUND VM SERVICE      ")
-    print("==========================================================")
+    print(Fore.CYAN + Style.BRIGHT + "==========================================================")
+    print(Fore.MAGENTA + Style.BRIGHT + "     🎯 LAKSHYA AI AGENT RUNNER - BACKGROUND SERVICE      ")
+    print(Fore.CYAN + Style.BRIGHT + "==========================================================")
     
     while True:
-        print("\n[RUNNER] Querying active search campaigns from database...")
+        print(Fore.YELLOW + "\n🔍 [RUNNER] Querying active search campaigns from database...")
         keywords = fetch_active_keywords()
-        print(f"[RUNNER] Found {len(keywords)} active tracking keywords.")
+        print(Fore.BLUE + f"📈 [RUNNER] Found {len(keywords)} active tracking keywords.")
         
         for kw in keywords:
             keyword_text = kw["keyword"]
             project_id = kw["project_id"]
             keyword_id = kw.get("id")
             
-            print(f"\n--- Processing Keyword Campaign: '{keyword_text}' ---")
+            print(Fore.CYAN + Style.BRIGHT + f"\n⚡ --- Processing Keyword Campaign: '{keyword_text}' ---")
             
             # 1. Scrape posts from Reddit, Twitter & LinkedIn
             for platform in ["reddit", "twitter", "linkedin"]:
@@ -40,7 +83,7 @@ def run_agent_loop(single_run=False):
                         
                         if post_id == 999:
                             # Simulation fallback printout
-                            print(f"[SIMULATOR] Scraped post context:\n - Author: {post['author']}\n - Content: {post['content']}")
+                            print(Fore.LIGHTBLACK_EX + f"🤖 [SIMULATOR] Scraped post context:\n - Author: {post['author']}\n - Content: {post['content']}")
                         
                         # 3. Analyze & qualify post with LLM advisor
                         score, category, reply = qualify_and_draft(
@@ -51,10 +94,9 @@ def run_agent_loop(single_run=False):
                             project_cta="https://lakshya.ai/consult"
                         )
                         
-                        print(f"[RUNNER] Lead Qualified! Score: {score}/100 | Category: {category}")
-                        
                         # 4. Save as Lead if it meets minimum threshold
                         if score >= 70:
+                            print(Fore.GREEN + Style.BRIGHT + f"✔ [RUNNER] Lead Qualified! Score: {score}/100 | Category: {category}")
                             clean_author = "".join([c for c in post["author"] if c.isalnum() or c in '_-']).lower()
                             contact_email = f"{clean_author}_contact@example.com" if clean_author else "contact@example.com"
                             lead_id = save_lead(
@@ -68,22 +110,23 @@ def run_agent_loop(single_run=False):
                                 generated_reply=reply
                             )
                             if lead_id:
-                                print(f"[SUCCESS] Lead registered in database with ID: {lead_id}")
+                                print(Fore.GREEN + Back.BLACK + Style.BRIGHT + f"🎉 [SUCCESS] Lead registered in database with ID: {lead_id}")
                         else:
-                            print(f"[RUNNER] Post by {post['author']} skipped (relevance score {score} is below threshold).")
+                            print(Fore.YELLOW + f"⚠ [RUNNER] Lead Qualified! Score: {score}/100 | Category: {category}")
+                            print(Fore.YELLOW + f"❌ [RUNNER] Post by {post['author']} skipped (relevance score {score} is below threshold).")
                 
                 except Exception as e:
-                    print(f"[ERROR] Scraping failed for {platform} under query '{keyword_text}': {e}")
+                    print(Fore.RED + Style.BRIGHT + f"❌ [ERROR] Scraping failed for {platform} under query '{keyword_text}': {e}")
             
             # Update keyword timestamp
             if keyword_id:
                 update_keyword_scraped_time(keyword_id)
                 
         if single_run:
-            print("\n[RUNNER] Single run completed. Exiting.")
+            print(Fore.YELLOW + "\n[RUNNER] Single run completed. Exiting.")
             break
             
-        print("\n[RUNNER] Sleep for 30 seconds before next crawl cycle...")
+        print(Fore.CYAN + "\n💤 [RUNNER] Sleep for 30 seconds before next crawl cycle...")
         time.sleep(30)
 
 if __name__ == "__main__":
@@ -94,4 +137,4 @@ if __name__ == "__main__":
     try:
         run_agent_loop(single_run=args.single)
     except KeyboardInterrupt:
-        print("\n\n[RUNNER] Execution interrupted by user. Exiting cleanly...")
+        print(Fore.LIGHTRED_EX + "\n\n👋 [RUNNER] Execution interrupted by user. Exiting cleanly...")

@@ -1,5 +1,6 @@
 import os
 import re
+from colorama import Fore, Style
 from config import GEMINI_API_KEY
 
 HAS_GEMINI_SDK = False
@@ -18,7 +19,7 @@ def qualify_and_draft(post_content, author, platform, project_pitch="our product
     """
     if HAS_GEMINI_SDK:
         try:
-            print("[AI ADVISOR] Calling Gemini API for lead qualification...")
+            print(Fore.MAGENTA + "🧠 [AI ADVISOR] Calling Gemini API for lead qualification...")
             model = genai.GenerativeModel('gemini-1.5-flash')
             prompt = f"""
             Analyze the following social media post for B2B lead generation suitability:
@@ -46,10 +47,10 @@ def qualify_and_draft(post_content, author, platform, project_pitch="our product
                 reply = "\n".join(lines[2:])
                 return score, category, reply
         except Exception as e:
-            print(f"[AI ADVISOR WARNING] Gemini API call failed: {e}. Falling back to rule engine...")
+            print(Fore.RED + f"⚠️ [AI ADVISOR WARNING] Gemini API call failed: {e}. Falling back to rule engine...")
             
     # Fallback Rule/Heuristic Engine
-    print("[AI ADVISOR] Running heuristic NLP classifier...")
+    print(Fore.MAGENTA + "⚙️ [AI ADVISOR] Running heuristic NLP classifier...")
     score = 50
     category = "General Match"
     
@@ -79,13 +80,13 @@ def qualify_and_draft(post_content, author, platform, project_pitch="our product
         category = "Low Intent - General advice request"
         
     reply = f"""Hey {author}! 
-
+ 
 It looks like you are searching for custom software developer recommendations or AI chatbot setups.
-
+ 
 Check out our team. {project_pitch} 
-
+ 
 We build customized workflows and integrations. You can book a free consultation call here: {project_cta}
-
+ 
 Hope this helps!"""
 
     return score, category, reply

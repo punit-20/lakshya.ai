@@ -1,5 +1,6 @@
 import time
 import random
+from colorama import Fore, Style
 
 # List of typical User Agents to rotate
 USER_AGENTS = [
@@ -68,9 +69,9 @@ def simulate_platform_scrape(platform, keyword):
     ua = random.choice(USER_AGENTS)
     delay = random.uniform(1.2, 2.8)
     
-    print(f"[SCRAPER] Initializing browser profile for {platform}...")
-    print(f"[SCRAPER] User-Agent: {ua}")
-    print(f"[SCRAPER] Crawling for search query: '{keyword}'...")
+    print(Fore.BLUE + f"🌐 [SCRAPER] Initializing browser profile for {platform}...")
+    print(Fore.LIGHTBLACK_EX + f"🕵️ [SCRAPER] User-Agent: {ua}")
+    print(Fore.BLUE + f"🕷 [SCRAPER] Crawling for search query: '{keyword}'...")
     time.sleep(delay)  # simulate loading delay
     
     posts = []
@@ -100,5 +101,5 @@ def simulate_platform_scrape(platform, keyword):
     }
     
     posts.append(post)
-    print(f"[SCRAPER] Scraped 1 matched post from {platform} by user {post['author']}")
+    print(Fore.GREEN + f"📥 [SCRAPER] Scraped 1 matched post from {platform} by user {post['author']}")
     return posts
