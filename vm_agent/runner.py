@@ -1,5 +1,10 @@
 import sys
 import subprocess
+import warnings
+
+# Suppress deprecation and future warnings from older packages (like google.generativeai)
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Reconfigure stdout/stderr to UTF-8 to prevent Unicode encoding issues (for emojis) on Windows Terminal
 if hasattr(sys.stdout, 'reconfigure'):
