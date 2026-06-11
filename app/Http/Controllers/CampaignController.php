@@ -252,7 +252,7 @@ Call to Action / Offers: " . ($request->cta ?: 'None specified') . "
 Generate the following fields:
 1. Title: A catchy hook or headline for the post (max 10 words).
 2. Description: The main body text/copy of the post (optimized for {$request->platform}, including appropriate hashtags and formatting).
-3. Image Description: A detailed, highly descriptive prompt to generate a beautiful, modern, high-quality photo or graphic suitable for this post.
+3. Image Description: A short, punchy 5-10 word prompt for an image generator (no punctuation, e.g. "wood fired organic sourdough bread bakery").
 
 Output must be in JSON format matching the schema.";
 

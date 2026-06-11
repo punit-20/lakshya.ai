@@ -148,8 +148,8 @@ class DatabaseSeeder extends Seeder
             'author' => 'Sarah Miller',
             'url' => 'http://amzn.to/sarah-silver',
             'status' => 'Launched',
-            'image_prompt' => 'A close-up, high-resolution photo of a hand gently adorned with a few sterling silver botanical rings, showcasing intricate leaf and floral designs. The rings are on fingers, subtly catching the soft, natural morning sunlight. The background is softly blurred, featuring lush green moss and delicate forest ferns.',
-            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode('A close-up, high-resolution photo of a hand gently adorned with a few sterling silver botanical rings, showcasing intricate leaf and floral designs. The rings are on fingers, subtly catching the soft, natural morning sunlight. The background is softly blurred, featuring lush green moss and delicate forest ferns.') . '?width=600&height=400&nologo=true&seed=4592'
+            'image_prompt' => 'sterling silver botanical rings leaf design morning sunlight',
+            'image_url' => 'https://image.pollinations.ai/prompt/sterling-silver-botanical-rings-leaf-design-morning-sunlight?width=600&height=400&nologo=true&seed=4592'
         ]);
 
         Post::create([
@@ -161,8 +161,8 @@ class DatabaseSeeder extends Seeder
             'author' => 'Sarah Miller',
             'url' => 'http://amzn.to/sarah-silver',
             'status' => 'Launched',
-            'image_prompt' => 'An intricate handcrafted sterling silver ring shaped like ivy leaves, lying flat on a rustic dark wood surface, warm bokeh lighting background, detailed macro shots of leaf veins.',
-            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode('An intricate handcrafted sterling silver ring shaped like ivy leaves, lying flat on a rustic dark wood surface, warm bokeh lighting background, detailed macro shots of leaf veins.') . '?width=600&height=400&nologo=true&seed=1829'
+            'image_prompt' => 'handcrafted sterling silver ring ivy leaf wood surface',
+            'image_url' => 'https://image.pollinations.ai/prompt/handcrafted-sterling-silver-ring-ivy-leaf-wood-surface?width=600&height=400&nologo=true&seed=1829'
         ]);
 
         // David Chen's Coffee campaigns
@@ -175,8 +175,8 @@ class DatabaseSeeder extends Seeder
             'author' => 'David Chen',
             'url' => 'http://coffee-beans.example.com',
             'status' => 'Launched',
-            'image_prompt' => 'Freshly roasted single-origin dark coffee beans cascading out of a canvas burlap sack, next to a steaming warm white ceramic coffee mug, blurred background of a cozy modern espresso bar.',
-            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode('Freshly roasted single-origin dark coffee beans cascading out of a canvas burlap sack, next to a steaming warm white ceramic coffee mug, blurred background of a cozy modern espresso bar.') . '?width=600&height=400&nologo=true&seed=3981'
+            'image_prompt' => 'roasted coffee beans burlap sack steaming espresso mug',
+            'image_url' => 'https://image.pollinations.ai/prompt/roasted-coffee-beans-burlap-sack-steaming-espresso-mug?width=600&height=400&nologo=true&seed=3981'
         ]);
 
         // 4. Platform Accounts (Scraper Profiles)

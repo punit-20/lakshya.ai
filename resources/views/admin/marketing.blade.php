@@ -337,7 +337,7 @@
                                     <div class="spinner"></div>
                                     <span>Rendering Creative via Pollinations AI...</span>
                                 </div>
-                                <img id="previewImage" src="" alt="Campaign Graphic" style="width: 100%; height: auto; min-height: 200px; max-height: 280px; object-fit: cover; display: block;" onload="hideImageLoader()">
+                                <img id="previewImage" src="" alt="Campaign Graphic" style="width: 100%; height: auto; min-height: 200px; max-height: 280px; object-fit: cover; display: block;" onload="hideImageLoader()" onerror="hideImageLoader(); this.onerror=null; this.src='https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600';">
                             </div>
                         </div>
 
