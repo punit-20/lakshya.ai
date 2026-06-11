@@ -123,18 +123,60 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Client Projects
-        Project::create([
+        $clientProject1 = Project::create([
             'user_id' => $client1->id,
             'name' => 'Sterling Botanical Jewelry',
             'description' => 'Organic outreach and creative campaigns driving traffic to sterling silver botanical jewelry and custom rings.',
             'status' => 'Active',
         ]);
 
-        Project::create([
+        $clientProject2 = Project::create([
             'user_id' => $client2->id,
             'name' => 'Artisanal Coffee Roasters',
             'description' => 'Social marketing campaign for single-origin artisanal coffee micro-lots and subscriber conversions.',
             'status' => 'Active',
+        ]);
+
+        // Seed mock launched campaigns/posts with AI-generated images
+        // Sarah Miller's Jewelry campaigns
+        Post::create([
+            'project_id' => $clientProject1->id,
+            'platform' => 'twitter',
+            'external_id' => 'launch_seed_1',
+            'title' => 'Adorn Yourself with Recycled Silver Botanical Rings!',
+            'content' => "🌿 Adorn your fingers with the beauty of nature! ✨ Our exquisite sterling silver botanical rings are handcrafted from recycled silver, making them as eco-friendly as they are stunning. Feel connected to the earth with every wear. Ready to embrace sustainable elegance? Use coupon NATURE15 for 15% off your unique piece! 👇 Shop now: http://amzn.to/sarah-silver #EcoFriendlyJewelry #BotanicalRings #SterlingSilver #RecycledSilver #NatureLover #Handcrafted",
+            'author' => 'Sarah Miller',
+            'url' => 'http://amzn.to/sarah-silver',
+            'status' => 'Launched',
+            'image_prompt' => 'A close-up, high-resolution photo of a hand gently adorned with a few sterling silver botanical rings, showcasing intricate leaf and floral designs. The rings are on fingers, subtly catching the soft, natural morning sunlight. The background is softly blurred, featuring lush green moss and delicate forest ferns.',
+            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode('A close-up, high-resolution photo of a hand gently adorned with a few sterling silver botanical rings, showcasing intricate leaf and floral designs. The rings are on fingers, subtly catching the soft, natural morning sunlight. The background is softly blurred, featuring lush green moss and delicate forest ferns.') . '?width=600&height=400&nologo=true&seed=4592'
+        ]);
+
+        Post::create([
+            'project_id' => $clientProject1->id,
+            'platform' => 'reddit',
+            'external_id' => 'launch_seed_2',
+            'title' => 'Handcrafted Botanical Leaf Ring - Thought it turned out beautiful!',
+            'content' => "Just wanted to share this sterling silver ivy leaf ring I finished polishing. Crafted entirely from recycled silver, with details molded from real ivy leaves. What do you guys think? If you'd like to check out my other botanical creations, use coupon CODEIVY for free shipping: http://amzn.to/sarah-silver",
+            'author' => 'Sarah Miller',
+            'url' => 'http://amzn.to/sarah-silver',
+            'status' => 'Launched',
+            'image_prompt' => 'An intricate handcrafted sterling silver ring shaped like ivy leaves, lying flat on a rustic dark wood surface, warm bokeh lighting background, detailed macro shots of leaf veins.',
+            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode('An intricate handcrafted sterling silver ring shaped like ivy leaves, lying flat on a rustic dark wood surface, warm bokeh lighting background, detailed macro shots of leaf veins.') . '?width=600&height=400&nologo=true&seed=1829'
+        ]);
+
+        // David Chen's Coffee campaigns
+        Post::create([
+            'project_id' => $clientProject2->id,
+            'platform' => 'facebook',
+            'external_id' => 'launch_seed_3',
+            'title' => 'Single-Origin Coffee Roasts Direct to Your Door!',
+            'content' => "☕ Experience the rich flavor of organic, micro-lot coffee beans roasted fresh daily. Support fair-trade growers and treat your mornings to the ultimate brew. Get 20% off your first bag with code BREW20! 👇 Shop single-origin lots: http://coffee-beans.example.com",
+            'author' => 'David Chen',
+            'url' => 'http://coffee-beans.example.com',
+            'status' => 'Launched',
+            'image_prompt' => 'Freshly roasted single-origin dark coffee beans cascading out of a canvas burlap sack, next to a steaming warm white ceramic coffee mug, blurred background of a cozy modern espresso bar.',
+            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode('Freshly roasted single-origin dark coffee beans cascading out of a canvas burlap sack, next to a steaming warm white ceramic coffee mug, blurred background of a cozy modern espresso bar.') . '?width=600&height=400&nologo=true&seed=3981'
         ]);
 
         // 4. Platform Accounts (Scraper Profiles)

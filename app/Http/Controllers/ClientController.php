@@ -96,7 +96,13 @@ class ClientController extends Controller
             $clickTrend[] = round($stats['clicks'] / 7 + cos($seed) * ($stats['clicks'] / 25));
         }
 
-        return view('clients.dashboard', compact('client', 'stats', 'project', 'days', 'reachTrend', 'clickTrend'));
+        // Fetch launched campaign posts for this client
+        $campaigns = \App\Models\Post::where('project_id', $project->id)
+            ->where('status', 'Launched')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('clients.dashboard', compact('client', 'stats', 'project', 'days', 'reachTrend', 'clickTrend', 'campaigns'));
     }
 
     // --- Client Creative Builder ---
@@ -209,12 +215,30 @@ Output must be in JSON format matching the schema.";
         ]);
 
         $client = $this->getClientUser();
+        $project = Project::where('user_id', $client->id)->first();
+        if (!$project) {
+            return response()->json(['success' => false, 'error' => 'No active campaign project found.'], 404);
+        }
+
+        // Save campaign creative in database
+        \App\Models\Post::create([
+            'project_id' => $project->id,
+            'platform' => $request->platform,
+            'external_id' => 'launch_' . uniqid(),
+            'title' => $request->title,
+            'content' => $request->description,
+            'author' => $client->name,
+            'url' => $project->url ?? 'http://amzn.to/example-affiliate-link',
+            'status' => 'Launched',
+            'image_prompt' => $request->image_prompt,
+            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode($request->image_prompt) . '?width=600&height=400&nologo=true&seed=' . rand(1000, 99999)
+        ]);
 
         // Log in AuditLog
         AuditLog::create([
             'user_id' => $client->id,
             'action' => "Client launched {$request->platform} affiliate marketing campaign '{$request->title}'",
-            'target_table' => 'campaigns',
+            'target_table' => 'posts',
             'ip_address' => $request->ip()
         ]);
 
