@@ -158,7 +158,19 @@
 
                     @if($campaign->image_url)
                         <div style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); aspect-ratio: 3/2; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; position: relative;">
-                            <img src="{{ $campaign->image_url }}" alt="Campaign Creative" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.onerror=null; this.src='{{ (str_contains(strtolower($campaign->title), 'coffee') || str_contains(strtolower($campaign->content), 'coffee')) ? 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600' : 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600' }}';">
+                            <img src="{{ $campaign->image_url }}" alt="Campaign Creative" style="width: 100%; height: 100%; object-fit: cover; display: block;" 
+                                 onerror="
+                                    const currentSrc = this.src;
+                                    const fallback = '{{ (str_contains(strtolower($campaign->title), 'coffee') || str_contains(strtolower($campaign->content), 'coffee')) ? 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600' : 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600' }}';
+                                    if (currentSrc.includes('image.pollinations.ai') && !currentSrc.includes('model=')) {
+                                        this.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'model=turbo';
+                                    } else if (currentSrc.includes('model=turbo')) {
+                                        this.src = currentSrc.replace('model=turbo', 'model=speed');
+                                    } else {
+                                        this.onerror = null;
+                                        this.src = fallback;
+                                    }
+                                 ">
                         </div>
                     @endif
 

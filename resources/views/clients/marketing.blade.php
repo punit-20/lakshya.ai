@@ -337,7 +337,20 @@
                                     <div class="spinner"></div>
                                     <span>Rendering Creative via Pollinations AI...</span>
                                 </div>
-                                <img id="previewImage" src="" alt="Campaign Graphic" style="width: 100%; height: auto; min-height: 200px; max-height: 280px; object-fit: cover; display: block;" onload="hideImageLoader()" onerror="hideImageLoader(); this.onerror=null; this.src='https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600';">
+                                <img id="previewImage" src="" alt="Campaign Graphic" style="width: 100%; height: auto; min-height: 200px; max-height: 280px; object-fit: cover; display: block;" onload="hideImageLoader()" 
+                                     onerror="
+                                        const currentSrc = this.src;
+                                        const fallback = 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600';
+                                        if (currentSrc && currentSrc.includes('image.pollinations.ai') && !currentSrc.includes('model=')) {
+                                            this.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'model=turbo';
+                                        } else if (currentSrc && currentSrc.includes('model=turbo')) {
+                                            this.src = currentSrc.replace('model=turbo', 'model=speed');
+                                        } else {
+                                            hideImageLoader();
+                                            this.onerror = null;
+                                            this.src = fallback;
+                                        }
+                                     ">
                             </div>
                         </div>
 
@@ -494,7 +507,7 @@
 
                 const encodedPrompt = encodeURIComponent(data.image_prompt);
                 const randomSeed = Math.floor(Math.random() * 1000000);
-                previewImg.src = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=600&height=400&nologo=true&seed=${randomSeed}`;
+                previewImg.src = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=600&height=400&nologo=true&model=turbo&seed=${randomSeed}`;
                 previewImg.style.display = 'block';
 
                 // Toggle visibility states
@@ -529,7 +542,7 @@
 
         const encodedPrompt = encodeURIComponent(customPrompt);
         const randomSeed = Math.floor(Math.random() * 1000000);
-        previewImg.src = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=600&height=400&nologo=true&seed=${randomSeed}`;
+        previewImg.src = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=600&height=400&nologo=true&model=turbo&seed=${randomSeed}`;
         previewImg.style.display = 'block';
         currentCampaign.image_prompt = customPrompt;
     }

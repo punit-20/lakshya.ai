@@ -149,7 +149,7 @@ class DatabaseSeeder extends Seeder
             'url' => 'http://amzn.to/sarah-silver',
             'status' => 'Launched',
             'image_prompt' => 'sterling silver botanical rings leaf design morning sunlight',
-            'image_url' => 'https://image.pollinations.ai/prompt/sterling-silver-botanical-rings-leaf-design-morning-sunlight?width=600&height=400&nologo=true&seed=4592'
+            'image_url' => 'https://image.pollinations.ai/prompt/sterling-silver-botanical-rings-leaf-design-morning-sunlight?width=600&height=400&nologo=true&model=turbo&seed=4592'
         ]);
 
         Post::create([
@@ -162,7 +162,7 @@ class DatabaseSeeder extends Seeder
             'url' => 'http://amzn.to/sarah-silver',
             'status' => 'Launched',
             'image_prompt' => 'handcrafted sterling silver ring ivy leaf wood surface',
-            'image_url' => 'https://image.pollinations.ai/prompt/handcrafted-sterling-silver-ring-ivy-leaf-wood-surface?width=600&height=400&nologo=true&seed=1829'
+            'image_url' => 'https://image.pollinations.ai/prompt/handcrafted-sterling-silver-ring-ivy-leaf-wood-surface?width=600&height=400&nologo=true&model=turbo&seed=1829'
         ]);
 
         // David Chen's Coffee campaigns
@@ -176,7 +176,7 @@ class DatabaseSeeder extends Seeder
             'url' => 'http://coffee-beans.example.com',
             'status' => 'Launched',
             'image_prompt' => 'roasted coffee beans burlap sack steaming espresso mug',
-            'image_url' => 'https://image.pollinations.ai/prompt/roasted-coffee-beans-burlap-sack-steaming-espresso-mug?width=600&height=400&nologo=true&seed=3981'
+            'image_url' => 'https://image.pollinations.ai/prompt/roasted-coffee-beans-burlap-sack-steaming-espresso-mug?width=600&height=400&nologo=true&model=turbo&seed=3981'
         ]);
 
         // 4. Platform Accounts (Scraper Profiles)

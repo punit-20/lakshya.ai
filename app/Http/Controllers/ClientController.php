@@ -231,7 +231,7 @@ Output must be in JSON format matching the schema.";
             'url' => $project->url ?? 'http://amzn.to/example-affiliate-link',
             'status' => 'Launched',
             'image_prompt' => $request->image_prompt,
-            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode($request->image_prompt) . '?width=600&height=400&nologo=true&seed=' . rand(1000, 99999)
+            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode($request->image_prompt) . '?width=600&height=400&nologo=true&model=turbo&seed=' . rand(1000, 99999)
         ]);
 
         // Log in AuditLog
