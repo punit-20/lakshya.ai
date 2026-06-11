@@ -1,0 +1,277 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Traits\ActiveProjectTrait;
+use App\Models\User;
+use App\Models\Project;
+use App\Models\AuditLog;
+use App\Models\Notification;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Carbon\Carbon;
+
+class ClientController extends Controller
+{
+    use ActiveProjectTrait;
+
+    /**
+     * Helper to get the active client context.
+     * If impersonating, returns the impersonated user, else falls back to auth user.
+     */
+    private function getClientUser()
+    {
+        if (session()->has('impersonating_client_id')) {
+            return User::find(session('impersonating_client_id'));
+        }
+        // Fallback for testing: return the first seeded client if not logged in
+        return User::where('role', 'client')->first();
+    }
+
+    // --- Admin Client Directory ---
+    public function adminIndex()
+    {
+        $clients = User::where('role', 'client')->with(['subscription', 'projects'])->get();
+
+        // Calculate and attach mock analytics on the fly
+        foreach ($clients as $client) {
+            $stats = $this->getClientMockStats($client);
+            $client->total_reach = $stats['reach'];
+            $client->total_clicks = $stats['clicks'];
+            $client->total_spend = $stats['spend'];
+            $client->total_commission = $stats['commission'];
+        }
+
+        return view('admin.clients', compact('clients'));
+    }
+
+    // --- Impersonation controls ---
+    public function impersonateClient($id)
+    {
+        $client = User::findOrFail($id);
+        
+        session(['impersonating_client_id' => $client->id]);
+
+        // Audit Log
+        AuditLog::create([
+            'user_id' => null, // Admin action
+            'action' => "Initiated client simulation/testing mode for client '{$client->name}'",
+            'target_table' => 'users',
+            'ip_address' => request()->ip()
+        ]);
+
+        return redirect()->route('client.dashboard')->with('info', "Simulation mode active for client: {$client->name}. You are now viewing client-specific dashboards.");
+    }
+
+    public function exitImpersonate()
+    {
+        session()->forget('impersonating_client_id');
+
+        return redirect()->route('admin.clients')->with('info', "Simulation mode deactivated. Returned to Admin dashboard.");
+    }
+
+    // --- Client Dashboard ---
+    public function dashboard()
+    {
+        $client = $this->getClientUser();
+        if (!$client) {
+            return redirect()->route('admin.clients')->with('info', 'No active client session found.');
+        }
+
+        $stats = $this->getClientMockStats($client);
+        $project = Project::where('user_id', $client->id)->first() ?? new Project();
+
+        // Build 7-day trend statistics for charts
+        $days = [];
+        $reachTrend = [];
+        $clickTrend = [];
+
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i);
+            $days[] = $date->format('M d');
+            
+            // Generate stable pseudorandom curve based on user id and date index
+            $seed = ($client->id * 10) + $i;
+            $reachTrend[] = round($stats['reach'] / 7 + sin($seed) * ($stats['reach'] / 20));
+            $clickTrend[] = round($stats['clicks'] / 7 + cos($seed) * ($stats['clicks'] / 25));
+        }
+
+        return view('clients.dashboard', compact('client', 'stats', 'project', 'days', 'reachTrend', 'clickTrend'));
+    }
+
+    // --- Client Creative Builder ---
+    public function marketing()
+    {
+        $client = $this->getClientUser();
+        $project = Project::where('user_id', $client->id)->first();
+        
+        return view('clients.marketing', compact('client', 'project'));
+    }
+
+    public function generateCampaign(Request $request)
+    {
+        $request->validate([
+            'business_description' => 'required|string',
+            'platform' => 'required|string',
+            'tone' => 'required|string',
+            'target_audience' => 'required|string',
+            'cta' => 'nullable|string',
+        ]);
+
+        $apiKey = env('GEMINI_API_KEY');
+        if (!$apiKey) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Gemini API Key is not configured in the environment.'
+            ], 500);
+        }
+
+        $prompt = "You are a world-class digital marketer and copywriter.
+Generate a high-converting social media marketing post with affiliate links for the following business:
+Business Description: {$request->business_description}
+Target Platform: {$request->platform}
+Tone of Voice: {$request->tone}
+Target Audience: {$request->target_audience}
+Call to Action / Affiliate Offer: " . ($request->cta ?: 'None specified') . "
+
+Generate the following fields:
+1. Title: A catchy hook or headline for the post (max 10 words).
+2. Description: The main body text/copy of the post (optimized for {$request->platform}, incorporating affiliate marketing links and appropriate hashtags/formatting).
+3. Image Description: A detailed, highly descriptive prompt to generate a beautiful, modern, high-quality photo or graphic suitable for this post.
+
+Output must be in JSON format matching the schema.";
+
+        try {
+            $response = Http::withoutVerifying()->withHeaders([
+                'Content-Type' => 'application/json'
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json',
+                    'responseSchema' => [
+                        'type' => 'OBJECT',
+                        'properties' => [
+                            'title' => ['type' => 'STRING'],
+                            'description' => ['type' => 'STRING'],
+                            'image_prompt' => ['type' => 'STRING']
+                        ],
+                        'required' => ['title', 'description', 'image_prompt']
+                    ]
+                ]
+            ]);
+
+            if ($response->failed()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'API Request Failed: ' . $response->body()
+                ], 500);
+            }
+
+            $result = $response->json();
+            $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? '';
+            $data = json_decode($text, true);
+
+            if (!$data || !isset($data['title']) || !isset($data['description']) || !isset($data['image_prompt'])) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Failed to parse structured JSON from Gemini API.'
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'title' => $data['title'],
+                'description' => $data['description'],
+                'image_prompt' => $data['image_prompt']
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Gemini API Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function launchCampaign(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'platform' => 'required|string',
+            'image_prompt' => 'required|string',
+        ]);
+
+        $client = $this->getClientUser();
+
+        // Log in AuditLog
+        AuditLog::create([
+            'user_id' => $client->id,
+            'action' => "Client launched {$request->platform} affiliate marketing campaign '{$request->title}'",
+            'target_table' => 'campaigns',
+            'ip_address' => $request->ip()
+        ]);
+
+        // Dispatch notification
+        Notification::create([
+            'user_id' => $client->id,
+            'title' => 'Affiliate Campaign Live! 🚀',
+            'message' => "Campaign '{$request->title}' has been successfully broadcast to {$request->platform} outbox.",
+            'is_read' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Campaign successfully launched!'
+        ]);
+    }
+
+    // --- Analytics Mock Engine ---
+    private function getClientMockStats($client)
+    {
+        if ($client->email === 'sarah@jewelrybloom.com') {
+            return [
+                'reach' => 24150,
+                'clicks' => 524,
+                'conversions' => 18,
+                'commission' => 9000,
+                'spend' => 2750,
+                'plan' => 'Pro Tier'
+            ];
+        } elseif ($client->email === 'david@artisanalbeans.coffee') {
+            return [
+                'reach' => 8420,
+                'clicks' => 198,
+                'conversions' => 4,
+                'commission' => 2000,
+                'spend' => 1200,
+                'plan' => 'Starter Tier'
+            ];
+        } elseif ($client->email === 'emma@zenithgrowth.com') {
+            return [
+                'reach' => 31890,
+                'clicks' => 789,
+                'conversions' => 31,
+                'commission' => 15500,
+                'spend' => 4100,
+                'plan' => 'Pro Tier'
+            ];
+        }
+
+        // Default stats for new registrations
+        return [
+            'reach' => 0,
+            'clicks' => 0,
+            'conversions' => 0,
+            'commission' => 0,
+            'spend' => 0,
+            'plan' => 'Free Trial'
+        ];
+    }
+}

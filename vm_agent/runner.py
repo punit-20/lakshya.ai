@@ -22,7 +22,7 @@ def check_and_install_dependencies():
     import importlib
     required = {
         "mysql.connector": "mysql-connector-python",
-        "google.generativeai": "google-generativeai",
+        "google.genai": "google-genai",
         "colorama": "colorama"
     }
     for module, package in required.items():
@@ -119,6 +119,9 @@ def run_agent_loop(single_run=False):
                         else:
                             print(Fore.YELLOW + f"⚠ [RUNNER] Lead Qualified! Score: {score}/100 | Category: {category}")
                             print(Fore.YELLOW + f"❌ [RUNNER] Post by {post['author']} skipped (relevance score {score} is below threshold).")
+                        
+                        # Small delay to stay within Gemini API Free Tier rate limit (15 RPM)
+                        time.sleep(3)
                 
                 except Exception as e:
                     print(Fore.RED + Style.BRIGHT + f"❌ [ERROR] Scraping failed for {platform} under query '{keyword_text}': {e}")

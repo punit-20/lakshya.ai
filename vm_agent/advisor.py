@@ -5,10 +5,8 @@ from config import GEMINI_API_KEY
 
 HAS_GEMINI_SDK = False
 try:
-    import google.generativeai as genai
-    if GEMINI_API_KEY:
-        genai.configure(api_key=GEMINI_API_KEY)
-        HAS_GEMINI_SDK = True
+    from google import genai
+    HAS_GEMINI_SDK = True
 except ImportError:
     HAS_GEMINI_SDK = False
 
@@ -17,10 +15,10 @@ def qualify_and_draft(post_content, author, platform, project_pitch="our product
     Qualifies the lead score (0-100), extracts intent, and drafts a reply.
     Uses Gemini API if SDK is present and key is set. Otherwise, uses rules.
     """
-    if HAS_GEMINI_SDK:
+    if HAS_GEMINI_SDK and GEMINI_API_KEY:
         try:
-            print(Fore.MAGENTA + "🧠 [AI ADVISOR] Calling Gemini API for lead qualification...")
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            print(Fore.MAGENTA + "🧠 [AI ADVISOR] Calling Gemini API (google-genai) for lead qualification...")
+            client = genai.Client(api_key=GEMINI_API_KEY, http_options={'timeout': 25000})
             prompt = f"""
             Analyze the following social media post for B2B lead generation suitability:
             Post: "{post_content}"
@@ -35,7 +33,10 @@ def qualify_and_draft(post_content, author, platform, project_pitch="our product
             Line 2: Intent Category (2-5 words e.g. "High Intent - Roast Request")
             Line 3: Draft Reply Pitch (A personalized, helpful, slightly informal reply pitching our offering and referencing the CTA link)
             """
-            response = model.generate_content(prompt)
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt,
+            )
             lines = [line.strip() for line in response.text.split("\n") if line.strip()]
             if len(lines) >= 3:
                 try:

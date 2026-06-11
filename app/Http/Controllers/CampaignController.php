@@ -9,7 +9,9 @@ use App\Models\PlatformAccount;
 use App\Models\Subscription;
 use App\Models\Invoice;
 use App\Models\AuditLog;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class CampaignController extends Controller
 {
@@ -213,5 +215,137 @@ class CampaignController extends Controller
         $usedKeywords = \App\Models\Keyword::where('status', 'Active')->count();
 
         return view('admin.billing', compact('subscription', 'invoices', 'usedLeads', 'usedKeywords'));
+    }
+
+    // --- AI Marketer ---
+    public function marketing()
+    {
+        return view('admin.marketing');
+    }
+
+    public function generateMarketingPost(Request $request)
+    {
+        $request->validate([
+            'business_description' => 'required|string',
+            'platform' => 'required|string',
+            'tone' => 'required|string',
+            'target_audience' => 'required|string',
+            'cta' => 'nullable|string',
+        ]);
+
+        $apiKey = env('GEMINI_API_KEY');
+        if (!$apiKey) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Gemini API Key is not configured in the environment.'
+            ], 500);
+        }
+
+        $prompt = "You are a world-class digital marketer and copywriter.
+Generate a high-converting social media marketing post for the following business:
+Business Description: {$request->business_description}
+Target Platform: {$request->platform}
+Tone of Voice: {$request->tone}
+Target Audience: {$request->target_audience}
+Call to Action / Offers: " . ($request->cta ?: 'None specified') . "
+
+Generate the following fields:
+1. Title: A catchy hook or headline for the post (max 10 words).
+2. Description: The main body text/copy of the post (optimized for {$request->platform}, including appropriate hashtags and formatting).
+3. Image Description: A detailed, highly descriptive prompt to generate a beautiful, modern, high-quality photo or graphic suitable for this post.
+
+Output must be in JSON format matching the schema.";
+
+        try {
+            $response = Http::withoutVerifying()->withHeaders([
+                'Content-Type' => 'application/json'
+            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => 'application/json',
+                    'responseSchema' => [
+                        'type' => 'OBJECT',
+                        'properties' => [
+                            'title' => ['type' => 'STRING'],
+                            'description' => ['type' => 'STRING'],
+                            'image_prompt' => ['type' => 'STRING']
+                        ],
+                        'required' => ['title', 'description', 'image_prompt']
+                    ]
+                ]
+            ]);
+
+            if ($response->failed()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'API Request Failed: ' . $response->body()
+                ], 500);
+            }
+
+            $result = $response->json();
+            $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? '';
+            $data = json_decode($text, true);
+
+            if (!$data || !isset($data['title']) || !isset($data['description']) || !isset($data['image_prompt'])) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Failed to parse structured JSON from Gemini API.'
+                ], 500);
+            }
+
+            return response()->json([
+                'success' => true,
+                'title' => $data['title'],
+                'description' => $data['description'],
+                'image_prompt' => $data['image_prompt']
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Gemini API Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function launchMarketingCampaign(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string',
+            'description' => 'required|string',
+            'platform' => 'required|string',
+            'image_prompt' => 'required|string',
+        ]);
+
+        $projectId = $this->getActiveProjectId();
+        $project = Project::find($projectId);
+        $projectName = $project ? $project->name : 'Active Project';
+
+        // Log campaign in AuditLog
+        AuditLog::create([
+            'user_id' => $this->getAuthUserId(),
+            'action' => "Launched {$request->platform} digital marketing campaign '{$request->title}' for project '{$projectName}'",
+            'target_table' => 'campaigns',
+            'ip_address' => $request->ip()
+        ]);
+
+        // Create notification
+        Notification::create([
+            'user_id' => $this->getAuthUserId(),
+            'title' => 'Campaign Launched! 🚀',
+            'message' => "Campaign '{$request->title}' has been successfully published to {$request->platform}.",
+            'is_read' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Campaign successfully launched!'
+        ]);
     }
 }

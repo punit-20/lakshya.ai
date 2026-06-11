@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'CRM Kanban Board')
+@section('title', 'Lakshya Target Board')
 
 @section('styles')
 <style>
@@ -163,7 +163,7 @@
     <!-- Top Header -->
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>
-            <h1 style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px;">Leads Pipeline</h1>
+            <h1 style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px;">Lakshya Target Board</h1>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Move leads through outreach stages, draft replies with AI, and track status pipelines.</p>
         </div>
     </div>

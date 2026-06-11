@@ -184,6 +184,193 @@
 
     </div>
 
+    <!-- Lakshya Economics & Profit Planner -->
+    <div class="card" style="margin-top: 2rem; border-color: rgba(99, 102, 241, 0.25);">
+        <div class="card-header-flex" style="border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.5rem;">
+            <div>
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: white;">📈 Lakshya Economics & Profit Planner</h2>
+                <p class="card-subtitle">Real-time target benchmarks, operational budgets, and margin structures to stay profitable.</p>
+            </div>
+            <span class="badge badge-qualified" style="background: rgba(16, 185, 129, 0.15); color: #34d399;">92% Margin Efficiency</span>
+        </div>
+
+        <!-- Live Performance Metrics -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; background: rgba(99, 102, 241, 0.03); border: 1px solid rgba(99, 102, 241, 0.1); border-radius: 12px; padding: 1.25rem;">
+            <!-- Active Clients -->
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Active SaaS Clients</span>
+                <span style="font-size: 1.5rem; font-weight: 800; color: white;">{{ $activeClientsCount }} <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">/ 15 target</span></span>
+                <span style="font-size: 0.75rem; color: #60a5fa; font-weight: 600;">Starter/Pro Subscribers</span>
+            </div>
+            <!-- Live MRR -->
+            <div style="display: flex; flex-direction: column; gap: 0.25rem; border-left: 1px solid rgba(255, 255, 255, 0.05); padding-left: 1rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Live MRR</span>
+                <span style="font-size: 1.5rem; font-weight: 800; color: #34d399;">INR {{ number_format($liveMRR) }} <span style="font-size: 0.85rem; font-weight: 500; color: var(--text-muted);">/ 38k target</span></span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Recurring subscriptions</span>
+            </div>
+            <!-- Net Operating Income -->
+            <div style="display: flex; flex-direction: column; gap: 0.25rem; border-left: 1px solid rgba(255, 255, 255, 0.05); padding-left: 1rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Est. Net Profit</span>
+                <span style="font-size: 1.5rem; font-weight: 800; color: {{ $liveNetProfit >= 0 ? '#34d399' : '#fb7185' }};">
+                    {{ $liveNetProfit >= 0 ? '+' : '' }}INR {{ number_format($liveNetProfit) }}
+                </span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Target: INR 20,000 / mo</span>
+            </div>
+            <!-- Goal Progress -->
+            <div style="display: flex; flex-direction: column; gap: 0.4rem; border-left: 1px solid rgba(255, 255, 255, 0.05); padding-left: 1rem;">
+                <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">Profit Goal Achieved</span>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; font-weight: 700; color: white;">
+                    <span>Progress:</span>
+                    <span>{{ $profitTargetProgress }}%</span>
+                </div>
+                <div style="height: 6px; width: 100%; background-color: rgba(255, 255, 255, 0.05); border-radius: 3px; overflow: hidden; margin-top: 0.1rem;">
+                    <div style="height: 100%; width: {{ min($profitTargetProgress, 100) }}%; background-color: #6366f1; border-radius: 3px; box-shadow: 0 0 8px #6366f1;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+            
+            <!-- Expenses & Pricing -->
+            <div>
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">1. Operational Expenses (OPEX)</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Customer Care Salary:</span>
+                        <strong style="color: white;">INR 8,000 / mo</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Client Acquisition Ad Spend:</span>
+                        <strong style="color: white;">INR 5,000 / mo</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Google VM Crawler instances:</span>
+                        <strong style="color: white;">INR 2,500 / mo</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Laravel Web Hosting:</span>
+                        <strong style="color: white;">INR 1,500 / mo</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Gemini AI API Fees:</span>
+                        <strong style="color: white;">INR 1,000 / mo</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 700; padding-top: 0.5rem; color: #fb7185;">
+                        <span>Total Outflow:</span>
+                        <span>INR 18,000 / mo</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ad Spend CAC/LTV stats -->
+            <div>
+                <h3 style="font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">2. Acquisition Efficiency (CAC vs LTV)</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Target Cost Per Lead (CPL):</span>
+                        <strong style="color: white;">INR 100</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Leads via INR 5k Budget:</span>
+                        <strong style="color: white;">50 leads</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Conversion Rate Target:</span>
+                        <strong style="color: white;">16%</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Customer Acquisition Cost (CAC):</span>
+                        <strong style="color: #60a5fa;">INR 625</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; padding-bottom: 0.5rem; border-bottom: 1px dashed rgba(255,255,255,0.05);">
+                        <span style="color: var(--text-muted);">Customer Lifetime Value (LTV):</span>
+                        <strong style="color: #34d399;">INR 15,996</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: 700; padding-top: 0.5rem; color: #a855f7;">
+                        <span>LTV : CAC Ratio:</span>
+                        <span>25.6x (Extremely Viable)</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">3. Target Profitability Matrix</h3>
+            <div class="table-container">
+                <table class="custom-table" style="font-size: 0.8rem;">
+                    <thead>
+                        <tr>
+                            <th>Scenario Mix</th>
+                            <th>Starter Clients (INR 1,499)</th>
+                            <th>Professional Clients (INR 4,999)</th>
+                            <th>Gross Monthly Revenue</th>
+                            <th>Operational Cost</th>
+                            <th>Net Profit Target (INR)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong style="color: white;">Scenario A: Balanced Mix</strong></td>
+                            <td>10 clients (INR 14,990)</td>
+                            <td>5 clients (INR 24,995)</td>
+                            <td>INR 39,985</td>
+                            <td>INR 18,000</td>
+                            <td style="color: #34d399; font-weight: 700;">INR 21,985 (Success)</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: white;">Scenario B: Micro-Sellers</strong></td>
+                            <td>16 clients (INR 23,984)</td>
+                            <td>4 clients (INR 19,996)</td>
+                            <td>INR 43,980</td>
+                            <td>INR 18,000</td>
+                            <td style="color: #34d399; font-weight: 700;">INR 25,980 (Success)</td>
+                        </tr>
+                        <tr>
+                            <td><strong style="color: white;">Scenario C: Pure Professional</strong></td>
+                            <td>0 clients</td>
+                            <td>8 clients (INR 39,992)</td>
+                            <td>INR 39,992</td>
+                            <td>INR 18,000</td>
+                            <td style="color: #34d399; font-weight: 700;">INR 21,992 (Success)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- How to achieve target section -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem; display: grid; grid-template-columns: 0.4fr 1.6fr; gap: 2rem; align-items: center;">
+            <div style="padding: 1.25rem; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px; text-align: center;">
+                <span style="font-size: 2.2rem; display: block; margin-bottom: 0.25rem;">🎯</span>
+                <span style="font-size: 0.8rem; font-weight: 700; color: #a855f7; text-transform: uppercase;">Action Checklist</span>
+                <strong style="font-size: 1rem; display: block; color: white; margin-top: 0.25rem;">To Achieve Target</strong>
+            </div>
+            
+            <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.5rem; padding-left: 0;">
+                    <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <span style="color: #34d399; font-weight: bold;">[✓]</span>
+                        <span><strong>Step 1 (First 5 Days):</strong> Set up Google VM crawler accounts for Twitter/Reddit to automate lead discovery keywords.</span>
+                    </li>
+                    <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <span style="color: #34d399; font-weight: bold;">[✓]</span>
+                        <span><strong>Step 2 (Weekly):</strong> Deploy the INR 5,000 ad budget. Focus copy on "Get high-intent client leads automatically on Twitter & Reddit". Acquire 50 warm trial leads.</span>
+                    </li>
+                    <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <span style="color: #34d399; font-weight: bold;">[✓]</span>
+                        <span><strong>Step 3 (Conversion):</strong> Invite leads to generate their first social campaign using the <strong>AI Marketer</strong> builder. Give them client access to test their live previews.</span>
+                    </li>
+                    <li style="display: flex; align-items: flex-start; gap: 0.5rem;">
+                        <span style="color: #34d399; font-weight: bold;">[✓]</span>
+                        <span><strong>Step 4 (Scale):</strong> Onboard clients to Starter (INR 1,499) or Pro (INR 4,999) tiers. Upsell extra reach at INR 150 CPM to reach your target of **15 total paying clients**.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
 </div>
 @endsection
 

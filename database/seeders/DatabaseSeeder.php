@@ -28,9 +28,32 @@ class DatabaseSeeder extends Seeder
             'name' => 'Lakshya Admin',
             'email' => 'admin@lakshya.ai',
             'password' => Hash::make('admin123'),
+            'role' => 'admin',
         ]);
 
-        // 2. Subscription & Invoices
+        // Mock Client Users
+        $client1 = User::create([
+            'name' => 'Sarah Miller',
+            'email' => 'sarah@jewelrybloom.com',
+            'password' => Hash::make('client123'),
+            'role' => 'client',
+        ]);
+
+        $client2 = User::create([
+            'name' => 'David Chen',
+            'email' => 'david@artisanalbeans.coffee',
+            'password' => Hash::make('client123'),
+            'role' => 'client',
+        ]);
+
+        $client3 = User::create([
+            'name' => 'Emma Watson',
+            'email' => 'emma@zenithgrowth.com',
+            'password' => Hash::make('client123'),
+            'role' => 'client',
+        ]);
+
+        // 2. Subscription & Invoices (Admin)
         $subscription = Subscription::create([
             'user_id' => $user->id,
             'tier' => 'Pro',
@@ -41,6 +64,31 @@ class DatabaseSeeder extends Seeder
                 'keywords_limit' => 25,
             ],
             'billing_cycle_ends_at' => Carbon::now()->addDays(23),
+        ]);
+
+        // Client Subscriptions
+        Subscription::create([
+            'user_id' => $client1->id,
+            'tier' => 'Pro',
+            'status' => 'Active',
+            'limits_json' => ['leads_monthly' => 1000, 'scrapes_daily' => 5000, 'keywords_limit' => 25],
+            'billing_cycle_ends_at' => Carbon::now()->addDays(20),
+        ]);
+
+        Subscription::create([
+            'user_id' => $client2->id,
+            'tier' => 'Starter',
+            'status' => 'Active',
+            'limits_json' => ['leads_monthly' => 100, 'scrapes_daily' => 500, 'keywords_limit' => 5],
+            'billing_cycle_ends_at' => Carbon::now()->addDays(15),
+        ]);
+
+        Subscription::create([
+            'user_id' => $client3->id,
+            'tier' => 'Pro',
+            'status' => 'Active',
+            'limits_json' => ['leads_monthly' => 1000, 'scrapes_daily' => 5000, 'keywords_limit' => 25],
+            'billing_cycle_ends_at' => Carbon::now()->addDays(28),
         ]);
 
         Invoice::create([
@@ -72,6 +120,21 @@ class DatabaseSeeder extends Seeder
             'name' => 'Zenith Growth Marketing',
             'description' => 'Outreach campaign targeting e-commerce stores looking to scale their paid ads and search engine optimizations.',
             'status' => 'Paused',
+        ]);
+
+        // Client Projects
+        Project::create([
+            'user_id' => $client1->id,
+            'name' => 'Sterling Botanical Jewelry',
+            'description' => 'Organic outreach and creative campaigns driving traffic to sterling silver botanical jewelry and custom rings.',
+            'status' => 'Active',
+        ]);
+
+        Project::create([
+            'user_id' => $client2->id,
+            'name' => 'Artisanal Coffee Roasters',
+            'description' => 'Social marketing campaign for single-origin artisanal coffee micro-lots and subscriber conversions.',
+            'status' => 'Active',
         ]);
 
         // 4. Platform Accounts (Scraper Profiles)

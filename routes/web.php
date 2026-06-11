@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\ClientController;
 
 Route::get('/', function () {
     return redirect()->route('admin.dashboard');
@@ -41,5 +42,23 @@ Route::prefix('admin')->group(function () {
     Route::get('/settings', [CampaignController::class, 'settings'])->name('admin.settings');
     Route::post('/settings/account', [CampaignController::class, 'saveAccount'])->name('admin.settings.account');
     Route::get('/billing', [CampaignController::class, 'billing'])->name('admin.billing');
+
+    // AI Marketer / Creative Generator
+    Route::get('/marketing', [CampaignController::class, 'marketing'])->name('admin.marketing');
+    Route::post('/marketing/generate', [CampaignController::class, 'generateMarketingPost'])->name('admin.marketing.generate');
+    Route::post('/marketing/launch', [CampaignController::class, 'launchMarketingCampaign'])->name('admin.marketing.launch');
+
+    // Client Directory & Impersonation (Admin)
+    Route::get('/clients', [ClientController::class, 'adminIndex'])->name('admin.clients');
+    Route::get('/clients/impersonate/{id}', [ClientController::class, 'impersonateClient'])->name('admin.clients.impersonate');
+    Route::get('/clients/exit', [ClientController::class, 'exitImpersonate'])->name('admin.clients.exit');
+});
+
+// Client Dashboard & Simulation
+Route::prefix('client')->group(function () {
+    Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('client.dashboard');
+    Route::get('/marketing', [ClientController::class, 'marketing'])->name('client.marketing');
+    Route::post('/marketing/generate', [ClientController::class, 'generateCampaign'])->name('client.marketing.generate');
+    Route::post('/marketing/launch', [ClientController::class, 'launchCampaign'])->name('client.marketing.launch');
 });
 

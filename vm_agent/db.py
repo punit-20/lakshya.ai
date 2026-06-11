@@ -98,7 +98,7 @@ def save_scraped_post(project_id, platform, external_id, title, content, author,
         if row:
             return row[0]
             
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute(
             "INSERT INTO posts (project_id, platform, external_id, title, content, author, url, status, scraped_at, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, %s, 'Pending', %s, %s, %s)",
             (project_id, platform, external_id, title, content, author, url, now, now, now)
@@ -124,7 +124,7 @@ def save_lead(post_id, project_id, contact_name, contact_email, score, intent_ca
         if cursor.fetchone():
             return None
             
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute(
             "INSERT INTO leads (post_id, project_id, contact_name, contact_email, score, intent_category, status, notes, generated_reply, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, 'New', %s, %s, %s, %s)",
             (post_id, project_id, contact_name, contact_email, score, intent_category, notes, generated_reply, now, now)
@@ -158,7 +158,7 @@ def update_keyword_scraped_time(keyword_id):
         return
     cursor = conn.cursor()
     try:
-        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute("UPDATE keywords SET last_scraped_at = %s, updated_at = %s WHERE id = %s", (now, now, keyword_id))
         conn.commit()
     except Exception as e:

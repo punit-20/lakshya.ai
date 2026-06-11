@@ -20,8 +20,26 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         view()->composer('layouts.admin', function ($view) {
-            $view->with('layoutProjects', \App\Models\Project::all());
-            $view->with('layoutUnreadNotificationsCount', \App\Models\Notification::where('is_read', false)->count());
+            if (session()->has('impersonating_client_id')) {
+                $clientId = session('impersonating_client_id');
+                $view->with('layoutProjects', \App\Models\Project::where('user_id', $clientId)->get());
+                $view->with('layoutUnreadNotificationsCount', \App\Models\Notification::where('user_id', $clientId)->where('is_read', false)->count());
+            } else {
+                $view->with('layoutProjects', \App\Models\Project::where(function($q) {
+                    $q->where('user_id', 1)
+                      ->orWhereNull('user_id')
+                      ->orWhereHas('user', function($qu) {
+                          $qu->where('role', 'admin');
+                      });
+                })->get());
+                $view->with('layoutUnreadNotificationsCount', \App\Models\Notification::where(function($q) {
+                    $q->where('user_id', 1)
+                      ->orWhereNull('user_id')
+                      ->orWhereHas('user', function($qu) {
+                          $qu->where('role', 'admin');
+                      });
+                })->where('is_read', false)->count());
+            }
         });
     }
 }

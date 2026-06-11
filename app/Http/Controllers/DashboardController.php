@@ -71,8 +71,32 @@ class DashboardController extends Controller
                 })->count();
         }
 
-        $recentNotifications = Notification::orderBy('created_at', 'desc')->take(5)->get();
+        $adminUserId = $this->getAuthUserId();
+        $recentNotifications = Notification::where(function($q) use ($adminUserId) {
+                $q->where('user_id', $adminUserId)
+                  ->orWhereNull('user_id')
+                  ->orWhereHas('user', function($qu) {
+                      $qu->where('role', 'admin');
+                  });
+            })
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
         $recentAuditLogs = AuditLog::orderBy('created_at', 'desc')->take(5)->get();
+
+        // Calculate dynamic admin metrics for the SaaS profit model
+        $activeClientsCount = \App\Models\User::where('role', 'client')->count();
+        $liveMRR = \App\Models\Subscription::whereHas('user', function($q) {
+                $q->where('role', 'client');
+            })
+            ->where('status', 'Active')
+            ->get()
+            ->sum(function($sub) {
+                return $sub->tier === 'Pro' ? 4999 : ($sub->tier === 'Starter' ? 1499 : 0);
+            });
+        
+        $liveNetProfit = $liveMRR - 18000; // MRR minus OPEX
+        $profitTargetProgress = round(($liveMRR / 38000) * 100);
 
         return view('admin.dashboard', compact(
             'project',
@@ -87,7 +111,11 @@ class DashboardController extends Controller
             'recentNotifications',
             'recentAuditLogs',
             'trendPercent',
-            'trendDirection'
+            'trendDirection',
+            'activeClientsCount',
+            'liveMRR',
+            'liveNetProfit',
+            'profitTargetProgress'
         ));
     }
 
@@ -95,6 +123,16 @@ class DashboardController extends Controller
     {
         try {
             $request->validate(['project_id' => 'required|exists:projects,id']);
+            
+            // Validate that the project is an admin project and not a client's campaign project
+            $proj = Project::findOrFail($request->project_id);
+            if ($proj->user_id && $proj->user_id != 1) {
+                $user = \App\Models\User::find($proj->user_id);
+                if ($user && $user->role === 'client') {
+                    return response()->json(['success' => false, 'error' => 'Unauthorized project access.'], 403);
+                }
+            }
+
             session(['active_project_id' => $request->project_id]);
             
             // Log action in audit logs
@@ -114,7 +152,19 @@ class DashboardController extends Controller
     public function markNotificationsRead()
     {
         try {
-            Notification::where('is_read', false)->update(['is_read' => true]);
+            if (session()->has('impersonating_client_id')) {
+                $clientId = session('impersonating_client_id');
+                Notification::where('user_id', $clientId)->where('is_read', false)->update(['is_read' => true]);
+            } else {
+                $adminUserId = $this->getAuthUserId();
+                Notification::where(function($q) use ($adminUserId) {
+                    $q->where('user_id', $adminUserId)
+                      ->orWhereNull('user_id')
+                      ->orWhereHas('user', function($qu) {
+                          $qu->where('role', 'admin');
+                      });
+                })->where('is_read', false)->update(['is_read' => true]);
+            }
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => 'Failed to mark notifications as read.'], 500);
