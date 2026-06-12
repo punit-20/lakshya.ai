@@ -170,4 +170,100 @@ class DashboardController extends Controller
             return response()->json(['success' => false, 'error' => 'Failed to mark notifications as read.'], 500);
         }
     }
+
+    public function statistics(Request $request)
+    {
+        $activeClientsCount = \App\Models\User::where('role', 'client')->count();
+        
+        $clients = \App\Models\User::where('role', 'client')->with(['subscription'])->get();
+        
+        $starterCount = 0;
+        $proCount = 0;
+        $mrr = 0;
+        
+        foreach ($clients as $c) {
+            $tier = $c->subscription->tier ?? 'Free Trial';
+            if ($tier === 'Starter') {
+                $starterCount++;
+                $mrr += 1499;
+            } elseif ($tier === 'Pro') {
+                $proCount++;
+                $mrr += 4999;
+            }
+        }
+        
+        // Outflows (OPEX)
+        $opexBreakdown = [
+            'Customer Care Salary' => 8000,
+            'Client Acquisition Ad Spend' => 5000,
+            'Google VM Crawler instances' => 2500,
+            'Laravel Web Hosting' => 1500,
+            'Gemini AI API Fees' => 1000
+        ];
+        $totalOpex = array_sum($opexBreakdown);
+        
+        // Profit / Loss
+        $netProfit = $mrr - $totalOpex;
+        $arr = $mrr * 12;
+        
+        // Targets
+        $targets = [
+            'clients' => 15,
+            'mrr' => 38000,
+            'net_profit' => 20000,
+            'margin' => 50 // %
+        ];
+        
+        // 6 months historical mock data
+        $months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        $historicalInflows = [12000, 16500, 22000, 27500, 31000, $mrr];
+        $historicalSpend = [18000, 18000, 18000, 18000, 18000, $totalOpex];
+        $historicalProfit = [];
+        for ($i = 0; $i < 6; $i++) {
+            $historicalProfit[] = $historicalInflows[$i] - $historicalSpend[$i];
+        }
+        
+        $startingRev = $historicalInflows[0];
+        $currentRev = $mrr;
+        $revenueGrowthPercent = $startingRev > 0 ? round((($currentRev - $startingRev) / $startingRev) * 100) : 0;
+        
+        // Advanced metrics
+        $conversionRate = 72; // overall lead conversion percentage
+        $cac = 625; // customer acquisition cost in INR
+        $ltv = 15996; // lifetime value in INR
+        $ltvToCacRatio = '25.6x';
+        $arpu = $activeClientsCount > 0 ? round($mrr / $activeClientsCount) : 0;
+        
+        // Pro performance metrics
+        $burnRate = $totalOpex;
+        $runway = 12; // months of operational runway
+        $marginEfficiency = $mrr > 0 ? round(($netProfit / $mrr) * 100) : 0;
+        $breakEvenClients = ceil($totalOpex / 3249); // average pricing is ~3249
+        
+        return view('admin.statistics', compact(
+            'activeClientsCount',
+            'starterCount',
+            'proCount',
+            'mrr',
+            'arr',
+            'opexBreakdown',
+            'totalOpex',
+            'netProfit',
+            'targets',
+            'months',
+            'historicalInflows',
+            'historicalSpend',
+            'historicalProfit',
+            'revenueGrowthPercent',
+            'conversionRate',
+            'cac',
+            'ltv',
+            'ltvToCacRatio',
+            'arpu',
+            'burnRate',
+            'runway',
+            'marginEfficiency',
+            'breakEvenClients'
+        ));
+    }
 }

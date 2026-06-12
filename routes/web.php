@@ -48,6 +48,9 @@ Route::prefix('admin')->group(function () {
     Route::post('/marketing/generate', [CampaignController::class, 'generateMarketingPost'])->name('admin.marketing.generate');
     Route::post('/marketing/launch', [CampaignController::class, 'launchMarketingCampaign'])->name('admin.marketing.launch');
 
+    // Economics & Stats
+    Route::get('/statistics', [DashboardController::class, 'statistics'])->name('admin.statistics');
+
     // Client Directory & Impersonation (Admin)
     Route::get('/clients', [ClientController::class, 'adminIndex'])->name('admin.clients');
     Route::get('/clients/impersonate/{id}', [ClientController::class, 'impersonateClient'])->name('admin.clients.impersonate');
