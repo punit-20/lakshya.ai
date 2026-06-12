@@ -124,14 +124,6 @@ class ClientController extends Controller
             'cta' => 'nullable|string',
         ]);
 
-        $apiKey = env('GEMINI_API_KEY');
-        if (!$apiKey) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Gemini API Key is not configured in the environment.'
-            ], 500);
-        }
-
         $prompt = "You are a world-class digital marketer and copywriter.
 Generate a high-converting social media marketing post with affiliate links for the following business:
 Business Description: {$request->business_description}
@@ -147,48 +139,18 @@ Generate the following fields:
 
 Output must be in JSON format matching the schema.";
 
+        $schema = [
+            'type' => 'OBJECT',
+            'properties' => [
+                'title' => ['type' => 'STRING'],
+                'description' => ['type' => 'STRING'],
+                'image_prompt' => ['type' => 'STRING']
+            ],
+            'required' => ['title', 'description', 'image_prompt']
+        ];
+
         try {
-            $response = Http::retry(3, 1500)->withoutVerifying()->withHeaders([
-                'Content-Type' => 'application/json'
-            ])->post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
-                'contents' => [
-                    [
-                        'parts' => [
-                            ['text' => $prompt]
-                        ]
-                    ]
-                ],
-                'generationConfig' => [
-                    'responseMimeType' => 'application/json',
-                    'responseSchema' => [
-                        'type' => 'OBJECT',
-                        'properties' => [
-                            'title' => ['type' => 'STRING'],
-                            'description' => ['type' => 'STRING'],
-                            'image_prompt' => ['type' => 'STRING']
-                        ],
-                        'required' => ['title', 'description', 'image_prompt']
-                    ]
-                ]
-            ]);
-
-            if ($response->failed()) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'API Request Failed: ' . $response->body()
-                ], 500);
-            }
-
-            $result = $response->json();
-            $text = $result['candidates'][0]['content']['parts'][0]['text'] ?? '';
-            $data = json_decode($text, true);
-
-            if (!$data || !isset($data['title']) || !isset($data['description']) || !isset($data['image_prompt'])) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Failed to parse structured JSON from Gemini API.'
-                ], 500);
-            }
+            $data = $this->callGeminiWithRotation($prompt, $schema);
 
             return response()->json([
                 'success' => true,
