@@ -1,10 +1,11 @@
 import sys
 import os
 import datetime
+import threading
 from config import DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
 
 HAS_MYSQL = False
-mysql_conn = None
+thread_local = threading.local()
 
 try:
     import mysql.connector
@@ -32,19 +33,26 @@ except ImportError:
         HAS_MYSQL = False
 
 def get_connection():
-    global mysql_conn
     if not HAS_MYSQL:
         print("[WARNING] MySQL database library (mysql-connector-python or PyMySQL) is not installed.")
         print("Run: pip install mysql-connector-python")
         return None
     
     try:
-        if mysql_conn is None or not is_connected(mysql_conn):
-            mysql_conn = connect_fn()
-        return mysql_conn
+        conn = getattr(thread_local, "mysql_conn", None)
+        if conn is None or not is_connected(conn):
+            conn = connect_fn()
+            # Set autocommit to True to prevent frozen transaction read snapshots
+            try:
+                conn.autocommit = True
+            except:
+                pass
+            thread_local.mysql_conn = conn
+        return conn
     except Exception as e:
         print(f"[ERROR] Failed to connect to MySQL database: {e}")
         return None
+
 
 def is_connected(conn):
     try:
@@ -165,3 +173,162 @@ def update_keyword_scraped_time(keyword_id):
         print(f"[DB ERROR] update_keyword_scraped_time: {e}")
     finally:
         cursor.close()
+
+import json
+
+def add_queue_task(client_id, task_type, payload_dict):
+    conn = get_connection()
+    if not conn:
+        print(f"[SIMULATED DB] Enqueued task {task_type}")
+        return 999
+    
+    cursor = conn.cursor()
+    try:
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
+        payload_str = json.dumps(payload_dict)
+        cursor.execute(
+            "INSERT INTO queue_tasks (client_id, task_type, payload, status, attempts, created_at, updated_at) VALUES (%s, %s, %s, 'Pending', 0, %s, %s)",
+            (client_id, task_type, payload_str, now, now)
+        )
+        conn.commit()
+        return cursor.lastrowid
+    except Exception as e:
+        print(f"[DB ERROR] add_queue_task: {e}")
+        return None
+    finally:
+        cursor.close()
+
+def fetch_next_pending_task():
+    conn = get_connection()
+    if not conn:
+        return None
+    
+    is_mysql_connector = "mysql.connector" in type(conn).__module__
+    cursor = conn.cursor(dictionary=True) if is_mysql_connector else conn.cursor()
+    try:
+        # Turn off autocommit temporarily to open a transaction block for row-level locks
+        try:
+            conn.autocommit = False
+        except:
+            pass
+            
+        cursor.execute("SELECT * FROM queue_tasks WHERE status = 'Pending' ORDER BY id ASC LIMIT 1 FOR UPDATE")
+        res = cursor.fetchone()
+        if not res:
+            try:
+                conn.commit()
+                conn.autocommit = True
+            except:
+                pass
+            return None
+        
+        # Convert tuple to dict if not dictionary cursor
+        if res and isinstance(res, tuple):
+            cols = [desc[0] for desc in cursor.description]
+            res = dict(zip(cols, res))
+        
+        # De-serialize payload
+        if "payload" in res and isinstance(res["payload"], str):
+            try:
+                res["payload"] = json.loads(res["payload"])
+            except:
+                pass
+        
+        task_id = res["id"]
+        # Update state to Processing immediately to lock it
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
+        
+        cursor.execute(
+            "UPDATE queue_tasks SET status = 'Processing', attempts = attempts + 1, updated_at = %s WHERE id = %s",
+            (now, task_id)
+        )
+        conn.commit()
+        
+        # Restore autocommit mode
+        try:
+            conn.autocommit = True
+        except:
+            pass
+            
+        return res
+    except Exception as e:
+        try:
+            conn.rollback()
+            conn.autocommit = True
+        except:
+            pass
+        print(f"[DB ERROR] fetch_next_pending_task: {e}")
+        return None
+    finally:
+        cursor.close()
+
+def reset_orphaned_tasks():
+    conn = get_connection()
+    if not conn:
+        return
+    cursor = conn.cursor()
+    try:
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
+        # Reset Processing tasks back to Pending
+        cursor.execute("UPDATE queue_tasks SET status = 'Pending', error_message = 'Worker crash recovery reset', updated_at = %s WHERE status = 'Processing'", (now,))
+        conn.commit()
+        print("[DB] Automatically reset any orphaned 'Processing' tasks back to 'Pending'.")
+    except Exception as e:
+        print(f"[DB ERROR] reset_orphaned_tasks: {e}")
+    finally:
+        cursor.close()
+
+
+def update_task_status(task_id, status, error_message=None, result_path=None):
+    conn = get_connection()
+    if not conn:
+        print(f"[SIMULATED DB] Updated task {task_id} to status {status}")
+        return
+    
+    cursor = conn.cursor()
+    try:
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute(
+            "UPDATE queue_tasks SET status = %s, error_message = %s, result_path = %s, updated_at = %s WHERE id = %s",
+            (status, error_message, result_path, now, task_id)
+        )
+        conn.commit()
+    except Exception as e:
+        print(f"[DB ERROR] update_task_status: {e}")
+    finally:
+        cursor.close()
+
+def fetch_task_by_id(task_id):
+    conn = get_connection()
+    if not conn:
+        return None
+    is_mysql_connector = "mysql.connector" in type(conn).__module__
+    cursor = conn.cursor(dictionary=True) if is_mysql_connector else conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM queue_tasks WHERE id = %s", (task_id,))
+        res = cursor.fetchone()
+        if res and isinstance(res, tuple):
+            cols = [desc[0] for desc in cursor.description]
+            res = dict(zip(cols, res))
+        return res
+    except Exception as e:
+        print(f"[DB ERROR] fetch_task_by_id: {e}")
+        return None
+    finally:
+        cursor.close()
+
+def update_post_image(post_id, image_url):
+    conn = get_connection()
+    if not conn:
+        return
+    cursor = conn.cursor()
+    try:
+        now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
+        cursor.execute("UPDATE posts SET image_url = %s, updated_at = %s WHERE id = %s", (image_url, now, post_id))
+        conn.commit()
+        print(f"[DB] Successfully updated posts ID {post_id} with image_url: {image_url}")
+    except Exception as e:
+        print(f"[DB ERROR] update_post_image: {e}")
+    finally:
+        cursor.close()
+

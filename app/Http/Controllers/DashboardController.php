@@ -10,6 +10,7 @@ use App\Models\Lead;
 use App\Models\Notification;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -98,6 +99,22 @@ class DashboardController extends Controller
         $liveNetProfit = $liveMRR - 18000; // MRR minus OPEX
         $profitTargetProgress = round(($liveMRR / 38000) * 100);
 
+        // Dynamic VM Status Check
+        $vmStatus = 'Offline';
+        $vmUptime = 'N/A';
+        $vmStats = null;
+        try {
+            $vmResponse = Http::timeout(1)->get('http://127.0.0.1:5000/status');
+            if ($vmResponse->successful()) {
+                $vmData = $vmResponse->json();
+                $vmStatus = 'Active';
+                $vmUptime = $vmData['uptime'] ?? 'N/A';
+                $vmStats = $vmData['last_run_stats'] ?? null;
+            }
+        } catch (\Exception $e) {
+            // Quiet fail
+        }
+
         return view('admin.dashboard', compact(
             'project',
             'totalLeads',
@@ -115,7 +132,10 @@ class DashboardController extends Controller
             'activeClientsCount',
             'liveMRR',
             'liveNetProfit',
-            'profitTargetProgress'
+            'profitTargetProgress',
+            'vmStatus',
+            'vmUptime',
+            'vmStats'
         ));
     }
 
@@ -265,5 +285,24 @@ class DashboardController extends Controller
             'marginEfficiency',
             'breakEvenClients'
         ));
+    }
+
+    public function triggerVmCrawl(Request $request)
+    {
+        try {
+            $response = Http::timeout(60)->post('http://127.0.0.1:5000/trigger');
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+            return response()->json([
+                'success' => false,
+                'error' => 'VM API returned error: ' . $response->body()
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Could not connect to VM API daemon: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

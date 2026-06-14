@@ -182,8 +182,8 @@ Output must be in JSON format matching the schema.";
             return response()->json(['success' => false, 'error' => 'No active campaign project found.'], 404);
         }
 
-        // Save campaign creative in database
-        \App\Models\Post::create([
+        // Save campaign creative in database with generating state
+        $post = \App\Models\Post::create([
             'project_id' => $project->id,
             'platform' => $request->platform,
             'external_id' => 'launch_' . uniqid(),
@@ -193,8 +193,22 @@ Output must be in JSON format matching the schema.";
             'url' => $project->url ?? 'http://amzn.to/example-affiliate-link',
             'status' => 'Launched',
             'image_prompt' => $request->image_prompt,
-            'image_url' => 'https://image.pollinations.ai/prompt/' . urlencode($request->image_prompt) . '?width=600&height=400&nologo=true&model=turbo&seed=' . rand(1000, 99999)
+            'image_url' => 'generating'
         ]);
+
+        // Submit the image generation task to the Python worker queue API
+        try {
+            Http::timeout(3)->post('http://127.0.0.1:5000/queue-task', [
+                'client_id' => $client->id,
+                'task_type' => 'generate_image',
+                'payload' => [
+                    'prompt' => $request->image_prompt,
+                    'post_id' => $post->id
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning("Failed to queue campaign image generation task for post ID {$post->id}: " . $e->getMessage());
+        }
 
         // Log in AuditLog
         AuditLog::create([

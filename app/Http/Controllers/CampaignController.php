@@ -289,6 +289,34 @@ Output must be in JSON format matching the schema.";
         $project = Project::find($projectId);
         $projectName = $project ? $project->name : 'Active Project';
 
+        // Save campaign creative in database with generating state
+        $post = \App\Models\Post::create([
+            'project_id' => $projectId,
+            'platform' => $request->platform,
+            'external_id' => 'launch_' . uniqid(),
+            'title' => $request->title,
+            'content' => $request->description,
+            'author' => 'Lakshya Admin',
+            'url' => $project->url ?? 'https://lakshya.ai',
+            'status' => 'Launched',
+            'image_prompt' => $request->image_prompt,
+            'image_url' => 'generating'
+        ]);
+
+        // Submit the image generation task to the Python worker queue API
+        try {
+            Http::timeout(3)->post('http://127.0.0.1:5000/queue-task', [
+                'client_id' => $this->getAuthUserId(),
+                'task_type' => 'generate_image',
+                'payload' => [
+                    'prompt' => $request->image_prompt,
+                    'post_id' => $post->id
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning("Failed to queue admin campaign image generation task for post ID {$post->id}: " . $e->getMessage());
+        }
+
         // Log campaign in AuditLog
         AuditLog::create([
             'user_id' => $this->getAuthUserId(),

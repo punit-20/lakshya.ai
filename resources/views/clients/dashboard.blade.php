@@ -154,25 +154,42 @@
                             {{ $campaign->title }}
                         </h3>
                         <p style="font-size: 0.85rem; color: var(--text-main); line-height: 1.5; white-space: pre-wrap;">{{ $campaign->content }}</p>
-                    </div>
-
-                    @if($campaign->image_url)
-                        <div style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); aspect-ratio: 3/2; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; position: relative;">
-                            <img src="{{ $campaign->image_url }}" alt="Campaign Creative" style="width: 100%; height: 100%; object-fit: cover; display: block;" 
-                                 onerror="
-                                    const currentSrc = this.src;
-                                    const fallback = '{{ (str_contains(strtolower($campaign->title), 'coffee') || str_contains(strtolower($campaign->content), 'coffee')) ? 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600' : 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600' }}';
-                                    if (currentSrc.includes('image.pollinations.ai') && !currentSrc.includes('model=')) {
-                                        this.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'model=turbo';
-                                    } else if (currentSrc.includes('model=turbo')) {
-                                        this.src = currentSrc.replace('model=turbo', 'model=speed');
-                                    } else {
-                                        this.onerror = null;
-                                        this.src = fallback;
+                    
+                        @if($campaign->image_url === 'generating')
+                            <div style="border-radius: 12px; overflow: hidden; border: 1px solid rgba(99, 102, 241, 0.3); aspect-ratio: 3/2; background: linear-gradient(135deg, rgba(18, 24, 38, 0.6) 0%, rgba(99, 102, 241, 0.15) 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; gap: 0.75rem;">
+                                <!-- Premium Animated Spinner -->
+                                <div class="spinner-ai" style="width: 32px; height: 32px; border: 3px solid rgba(255,255,255,0.05); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                                <span style="font-size: 0.8rem; font-weight: 600; color: #a1a1aa; letter-spacing: 0.5px; animation: pulse 1.5s infinite ease-in-out;">Generating AI Creative...</span>
+                                
+                                <style>
+                                    @keyframes spin {
+                                        0% { transform: rotate(0deg); }
+                                        100% { transform: rotate(360deg); }
                                     }
-                                 ">
-                        </div>
-                    @endif
+                                    @keyframes pulse {
+                                        0%, 100% { opacity: 0.6; }
+                                        50% { opacity: 1; }
+                                    }
+                                </style>
+                            </div>
+                        @elseif($campaign->image_url)
+                            <div style="border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); aspect-ratio: 3/2; background: rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; position: relative;">
+                                <img src="{{ (strpos($campaign->image_url, 'http://') === 0 || strpos($campaign->image_url, 'https://') === 0) ? $campaign->image_url : asset($campaign->image_url) }}" alt="Campaign Creative" style="width: 100%; height: 100%; object-fit: cover; display: block;" 
+                                     onerror="
+                                        const currentSrc = this.src;
+                                        const fallback = '{{ (str_contains(strtolower($campaign->title), 'coffee') || str_contains(strtolower($campaign->content), 'coffee')) ? 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=600' : 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600' }}';
+                                        if (currentSrc.includes('image.pollinations.ai') && !currentSrc.includes('model=')) {
+                                            this.src = currentSrc + (currentSrc.includes('?') ? '&' : '?') + 'model=turbo';
+                                        } else if (currentSrc.includes('model=turbo')) {
+                                            this.src = currentSrc.replace('model=turbo', 'model=speed');
+                                        } else {
+                                            this.onerror = null;
+                                            this.src = fallback;
+                                        }
+                                     ">
+                            </div>
+                        @endif
+                    </div>
 
                     <!-- Creative Performance Stats -->
                     @php

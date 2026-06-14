@@ -11,8 +11,23 @@
             <h1 style="font-size: 1.75rem; font-weight: 700; letter-spacing: -0.5px;">Welcome Back, Admin</h1>
             <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem;">Here is the active lead generation state for your campaign.</p>
         </div>
-        <div style="display: flex; gap: 0.5rem;">
-            <span class="badge badge-new" style="padding: 0.5rem 1rem;">VM Runner Status: Active</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            @if($vmStatus === 'Active')
+                <span id="vm-status-badge" class="badge badge-qualified" style="padding: 0.5rem 1rem; border: 1px solid var(--status-qualified-border);">
+                    VM Status: Active (Uptime: {{ $vmUptime }})
+                </span>
+            @else
+                <span id="vm-status-badge" class="badge badge-closed" style="padding: 0.5rem 1rem; border: 1px solid var(--status-closed-border);">
+                    VM Status: Offline
+                </span>
+            @endif
+
+            <button id="btn-trigger-scraper" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;" onclick="triggerScraperRun()" {{ $vmStatus !== 'Active' ? 'disabled' : '' }}>
+                <svg id="trigger-btn-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px; height:16px; transition: transform 0.2s;">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                </svg>
+                <span id="trigger-btn-text">Force VM Scraper Run</span>
+            </button>
         </div>
     </div>
 
@@ -477,6 +492,129 @@
             ctx.textAlign = 'center';
             ctx.fillText(days[i], points[i].x, padding.top + chartHeight + 18);
         }
+    }
+
+    function triggerScraperRun() {
+        const btn = document.getElementById('btn-trigger-scraper');
+        const btnText = document.getElementById('trigger-btn-text');
+        const btnIcon = document.getElementById('trigger-btn-icon');
+        const originalText = btnText.innerText;
+        
+        // Disable button and add loading state
+        btn.disabled = true;
+        btnText.innerText = 'Scraper Running...';
+        btnIcon.style.transform = 'scale(1.2)';
+        
+        // Add CSS animation keyframe for spinning dynamically if not present
+        if (!document.getElementById('spin-keyframe')) {
+            const style = document.createElement('style');
+            style.id = 'spin-keyframe';
+            style.innerHTML = `
+                @keyframes spin-pulse {
+                    0% { transform: rotate(0deg) scale(1.2); }
+                    50% { transform: rotate(180deg) scale(1.4); }
+                    100% { transform: rotate(360deg) scale(1.2); }
+                }
+                .toast-notification {
+                    position: fixed;
+                    bottom: 2rem;
+                    right: 2rem;
+                    background: rgba(18, 24, 38, 0.95);
+                    border: 1px solid var(--border-color);
+                    border-radius: 12px;
+                    padding: 1rem 1.5rem;
+                    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+                    backdrop-filter: blur(12px);
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    transform: translateY(100px);
+                    opacity: 0;
+                    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+                }
+                .toast-notification.show {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        btnIcon.style.animation = 'spin-pulse 1.5s linear infinite';
+
+        showToast('⚙️ Scraper Run Started', 'Initiating simulated crawl cycle on Reddit, Twitter, and LinkedIn...', 'info');
+
+        fetch('{{ route("admin.vm.trigger") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': window.csrfToken
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btnText.innerText = originalText;
+            btnIcon.style.animation = '';
+            btnIcon.style.transform = '';
+            
+            if (data.success) {
+                showToast('🚀 Scraper Completed!', `Scraped ${data.stats.posts_processed} posts & found ${data.stats.leads_found} qualified leads.`, 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2500);
+            } else {
+                showToast('❌ Run Failed', data.error || 'Scraper run returned error.', 'error');
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btnText.innerText = originalText;
+            btnIcon.style.animation = '';
+            btnIcon.style.transform = '';
+            showToast('❌ Network Error', 'Failed to connect to backend server: ' + err.message, 'error');
+        });
+    }
+
+    function showToast(title, message, type = 'info') {
+        const existingToast = document.querySelector('.toast-notification');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        
+        let borderStyle = 'border-color: var(--border-color);';
+        let titleColor = 'color: white;';
+        if (type === 'success') {
+            borderStyle = 'border-color: rgba(52, 211, 153, 0.4); box-shadow: 0 10px 35px rgba(52, 211, 153, 0.15);';
+            titleColor = 'color: #34d399;';
+        } else if (type === 'error') {
+            borderStyle = 'border-color: rgba(239, 68, 68, 0.4); box-shadow: 0 10px 35px rgba(239, 68, 68, 0.15);';
+            titleColor = 'color: #f87171;';
+        }
+
+        toast.style = borderStyle;
+        toast.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                <span style="font-size: 0.9rem; font-weight: 700; ${titleColor}">${title}</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">${message}</span>
+            </div>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.classList.add('show');
+        }, 50);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }, 4500);
     }
 </script>
 @endsection

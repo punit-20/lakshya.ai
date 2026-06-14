@@ -17,8 +17,8 @@ def qualify_and_draft(post_content, author, platform, project_pitch="our product
     """
     if HAS_GEMINI_SDK and GEMINI_API_KEY:
         try:
-            print(Fore.MAGENTA + "🧠 [AI ADVISOR] Calling Gemini API (google-genai) for lead qualification...")
-            client = genai.Client(api_key=GEMINI_API_KEY, http_options={'timeout': 25000})
+            print(Fore.MAGENTA + "[AI-ADVISOR] Calling Gemini API (google-genai) for lead qualification...")
+            client = genai.Client(api_key=GEMINI_API_KEY, http_options={'timeout': 3.0})
             prompt = f"""
             Analyze the following social media post for B2B lead generation suitability:
             Post: "{post_content}"
@@ -48,10 +48,10 @@ def qualify_and_draft(post_content, author, platform, project_pitch="our product
                 reply = "\n".join(lines[2:])
                 return score, category, reply
         except Exception as e:
-            print(Fore.RED + f"⚠️ [AI ADVISOR WARNING] Gemini API call failed: {e}. Falling back to rule engine...")
+            print(Fore.RED + f"[AI-ADVISOR-WARNING] Gemini API call failed: {e}. Falling back to rule engine...")
             
     # Fallback Rule/Heuristic Engine
-    print(Fore.MAGENTA + "⚙️ [AI ADVISOR] Running heuristic NLP classifier...")
+    print(Fore.MAGENTA + "[AI-ADVISOR] Running heuristic NLP classifier...")
     score = 50
     category = "General Match"
     

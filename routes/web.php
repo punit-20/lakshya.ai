@@ -50,6 +50,7 @@ Route::prefix('admin')->group(function () {
 
     // Economics & Stats
     Route::get('/statistics', [DashboardController::class, 'statistics'])->name('admin.statistics');
+    Route::post('/vm/trigger', [DashboardController::class, 'triggerVmCrawl'])->name('admin.vm.trigger');
 
     // Client Directory & Impersonation (Admin)
     Route::get('/clients', [ClientController::class, 'adminIndex'])->name('admin.clients');
