@@ -189,7 +189,7 @@ Autonomous Python daemon (`vm_agent/`) that runs 24/7:
 ### 📊 SaaS Economics Dashboard
 Real-time financial analytics for B2B SaaS monitoring:
 - **MRR / ARR** tracking with tier breakdown (Starter ₹1,499 / Pro ₹4,999)
-- **OPEX** breakdown (VMs, hosting, AI API, salaries, ad spend)
+- **Expense tracking** and operational outflow analytics
 - **Net Profit / Loss** calculation with historical trends
 - **Advanced Metrics:** CAC, LTV, ARPU, LTV:CAC ratio, burn rate, runway
 
