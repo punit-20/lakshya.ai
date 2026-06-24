@@ -1,18 +1,30 @@
 <?php
-
+ 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadController;
-use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\AgentController;
 
 Route::get('/', function () {
     return redirect()->route('admin.dashboard');
 });
 
-// TODO: Add ->middleware('auth') when authentication is implemented
-// Currently public for MVP development
-Route::prefix('admin')->group(function () {
+// Authentication routes
+Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login']);
+Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Admin Portal (Protected)
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     // Dashboard & Notifications
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::post('/switch-project', [DashboardController::class, 'switchProject']);
@@ -28,29 +40,40 @@ Route::prefix('admin')->group(function () {
     Route::post('/crm/meeting', [LeadController::class, 'scheduleMeeting'])->name('admin.crm.meeting');
 
     // Campaigns & Projects CRUD
-    Route::get('/projects', [CampaignController::class, 'projects'])->name('admin.projects');
-    Route::post('/projects/store', [CampaignController::class, 'storeProject'])->name('admin.projects.store');
-    Route::get('/projects/toggle/{id}', [CampaignController::class, 'toggleProject'])->name('admin.projects.toggle');
+    Route::get('/projects', [ProjectController::class, 'projects'])->name('admin.projects');
+    Route::post('/projects/store', [ProjectController::class, 'storeProject'])->name('admin.projects.store');
+    Route::get('/projects/toggle/{id}', [ProjectController::class, 'toggleProject'])->name('admin.projects.toggle');
 
     // Keywords management
-    Route::get('/keywords', [CampaignController::class, 'keywords'])->name('admin.keywords');
-    Route::post('/keywords/store', [CampaignController::class, 'storeKeyword'])->name('admin.keywords.store');
-    Route::post('/keywords/toggle/{id}', [CampaignController::class, 'toggleKeyword'])->name('admin.keywords.toggle');
-    Route::delete('/keywords/delete/{id}', [CampaignController::class, 'deleteKeyword'])->name('admin.keywords.delete');
+    Route::get('/keywords', [KeywordController::class, 'keywords'])->name('admin.keywords');
+    Route::post('/keywords/store', [KeywordController::class, 'storeKeyword'])->name('admin.keywords.store');
+    Route::post('/keywords/toggle/{id}', [KeywordController::class, 'toggleKeyword'])->name('admin.keywords.toggle');
+    Route::delete('/keywords/delete/{id}', [KeywordController::class, 'deleteKeyword'])->name('admin.keywords.delete');
 
     // Settings & Billing
-    Route::get('/settings', [CampaignController::class, 'settings'])->name('admin.settings');
-    Route::post('/settings/account', [CampaignController::class, 'saveAccount'])->name('admin.settings.account');
-    Route::get('/billing', [CampaignController::class, 'billing'])->name('admin.billing');
+    Route::get('/settings', [SettingsController::class, 'settings'])->name('admin.settings');
+    Route::post('/settings/account', [SettingsController::class, 'saveAccount'])->name('admin.settings.account');
+    Route::get('/billing', [BillingController::class, 'billing'])->name('admin.billing');
 
     // AI Marketer / Creative Generator
-    Route::get('/marketing', [CampaignController::class, 'marketing'])->name('admin.marketing');
-    Route::post('/marketing/generate', [CampaignController::class, 'generateMarketingPost'])->name('admin.marketing.generate');
-    Route::post('/marketing/launch', [CampaignController::class, 'launchMarketingCampaign'])->name('admin.marketing.launch');
+    Route::get('/marketing', [MarketingController::class, 'marketing'])->name('admin.marketing');
+    Route::post('/marketing/generate-social', [MarketingController::class, 'generateSocialSuite'])->name('admin.marketing.generate-social');
+    Route::post('/marketing/generate-growth', [MarketingController::class, 'generateGrowthSuite'])->name('admin.marketing.generate-growth');
+    Route::post('/marketing/generate-campaign', [MarketingController::class, 'generateAdCampaign'])->name('admin.marketing.generate-campaign');
+    Route::post('/marketing/launch', [MarketingController::class, 'launchMarketingCampaign'])->name('admin.marketing.launch');
 
     // Economics & Stats
     Route::get('/statistics', [DashboardController::class, 'statistics'])->name('admin.statistics');
     Route::post('/vm/trigger', [DashboardController::class, 'triggerVmCrawl'])->name('admin.vm.trigger');
+
+    // AI Agents Control Center
+    Route::get('/agents', [AgentController::class, 'index'])->name('admin.agents');
+    Route::post('/agents/toggle', [AgentController::class, 'toggleAgent'])->name('admin.agents.toggle');
+    Route::post('/agents/enqueue', [AgentController::class, 'enqueueTask'])->name('admin.agents.enqueue');
+    Route::get('/agents/visitor-stream', [AgentController::class, 'getVisitorStream']);
+    Route::get('/agents/whatsapp-logs', [AgentController::class, 'getWhatsAppLogs']);
+    Route::get('/agents/linkedin-logs', [AgentController::class, 'getLinkedInLogs']);
+    Route::get('/agents/queue-logs', [AgentController::class, 'getQueueLogs']);
 
     // Client Directory & Impersonation (Admin)
     Route::get('/clients', [ClientController::class, 'adminIndex'])->name('admin.clients');
@@ -58,11 +81,15 @@ Route::prefix('admin')->group(function () {
     Route::get('/clients/exit', [ClientController::class, 'exitImpersonate'])->name('admin.clients.exit');
 });
 
-// Client Dashboard & Simulation
-Route::prefix('client')->group(function () {
+// Client Portal (Protected)
+Route::prefix('client')->middleware('auth')->group(function () {
     Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('client.dashboard');
-    Route::get('/marketing', [ClientController::class, 'marketing'])->name('client.marketing');
-    Route::post('/marketing/generate', [ClientController::class, 'generateCampaign'])->name('client.marketing.generate');
-    Route::post('/marketing/launch', [ClientController::class, 'launchCampaign'])->name('client.marketing.launch');
+    
+    // Client Creative Builder (using dynamic MarketingController)
+    Route::get('/marketing', [MarketingController::class, 'marketing'])->name('client.marketing');
+    Route::post('/marketing/generate-social', [MarketingController::class, 'generateSocialSuite'])->name('client.marketing.generate-social');
+    Route::post('/marketing/generate-growth', [MarketingController::class, 'generateGrowthSuite'])->name('client.marketing.generate-growth');
+    Route::post('/marketing/generate-campaign', [MarketingController::class, 'generateAdCampaign'])->name('client.marketing.generate-campaign');
+    Route::post('/marketing/launch', [MarketingController::class, 'launchMarketingCampaign'])->name('client.marketing.launch');
 });
 

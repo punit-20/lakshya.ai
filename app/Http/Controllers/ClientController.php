@@ -66,6 +66,7 @@ class ClientController extends Controller
     public function exitImpersonate()
     {
         session()->forget('impersonating_client_id');
+        session()->forget('active_project_id');
 
         return redirect()->route('admin.clients')->with('info', "Simulation mode deactivated. Returned to Admin dashboard.");
     }

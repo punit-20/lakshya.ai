@@ -2,11 +2,13 @@ import sys
 import os
 import datetime
 import threading
-from config import DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
+import json
+from config import DB_CONNECTION, DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD
 
 HAS_MYSQL = False
 thread_local = threading.local()
 
+# Attempt to load MySQL drivers
 try:
     import mysql.connector
     HAS_MYSQL = True
@@ -32,7 +34,35 @@ except ImportError:
     except ImportError:
         HAS_MYSQL = False
 
+import sqlite3
+
 def get_connection():
+    if DB_CONNECTION == 'sqlite':
+        try:
+            conn = getattr(thread_local, "sqlite_conn", None)
+            if conn is None:
+                # Resolve SQLite database file path
+                db_path = DB_DATABASE
+                if not os.path.isabs(db_path):
+                    paths = [
+                        db_path,
+                        os.path.join("..", db_path),
+                        os.path.join("database", "database.sqlite"),
+                        os.path.join("..", "database", "database.sqlite"),
+                        os.path.join("..", "..", "database", "database.sqlite")
+                    ]
+                    for p in paths:
+                        if os.path.exists(p):
+                            db_path = os.path.abspath(p)
+                            break
+                conn = sqlite3.connect(db_path, timeout=30.0)
+                conn.row_factory = sqlite3.Row
+                thread_local.sqlite_conn = conn
+            return conn
+        except Exception as e:
+            print(f"[ERROR] Failed to connect to SQLite database: {e}")
+            return None
+
     if not HAS_MYSQL:
         print("[WARNING] MySQL database library (mysql-connector-python or PyMySQL) is not installed.")
         print("Run: pip install mysql-connector-python")
@@ -42,7 +72,6 @@ def get_connection():
         conn = getattr(thread_local, "mysql_conn", None)
         if conn is None or not is_connected(conn):
             conn = connect_fn()
-            # Set autocommit to True to prevent frozen transaction read snapshots
             try:
                 conn.autocommit = True
             except:
@@ -55,6 +84,8 @@ def get_connection():
 
 
 def is_connected(conn):
+    if DB_CONNECTION == 'sqlite':
+        return True
     try:
         if hasattr(conn, "is_connected"):
             return conn.is_connected()
@@ -63,29 +94,60 @@ def is_connected(conn):
     except:
         return False
 
+
+class SQLiteCursorWrapper:
+    def __init__(self, cursor):
+        self.cursor = cursor
+        
+    def __getattr__(self, name):
+        return getattr(self.cursor, name)
+        
+    def __iter__(self):
+        return iter(self.cursor)
+        
+    def execute(self, query, params=None):
+        query = query.replace('%s', '?').replace('FOR UPDATE', '')
+        if params is not None:
+            return self.cursor.execute(query, params)
+        return self.cursor.execute(query)
+
+def patch_cursor(cursor):
+    """
+    Wrap SQLite cursor to translate MySQL query strings
+    (%s placeholders, FOR UPDATE locks) dynamically to SQLite syntax.
+    """
+    if DB_CONNECTION == 'sqlite':
+        return SQLiteCursorWrapper(cursor)
+    return cursor
+
+
 # Database queries helpers
 def fetch_active_keywords():
     conn = get_connection()
     if not conn:
-        # Return mock keywords for simulation mode
         return [
             {"id": 1, "project_id": 1, "keyword": "roast my landing page", "status": "Active"},
             {"id": 2, "project_id": 1, "keyword": "website feedback", "status": "Active"}
         ]
     
-    is_mysql_connector = "mysql.connector" in type(conn).__module__
+    is_mysql_connector = False
+    if DB_CONNECTION != 'sqlite':
+        is_mysql_connector = "mysql.connector" in type(conn).__module__
+        
     cursor = conn.cursor(dictionary=True) if is_mysql_connector else conn.cursor()
+    cursor = patch_cursor(cursor)
+    
     try:
         cursor.execute("SELECT * FROM keywords WHERE status = 'Active'")
-        # Handle dict cursor variations between pymysql and mysql-connector
-        if hasattr(cursor, "fetchall"):
-            res = cursor.fetchall()
-            # Convert tuple list to dict list if cursor is not dict-based
-            if res and isinstance(res[0], tuple):
-                cols = [desc[0] for desc in cursor.description]
-                res = [dict(zip(cols, row)) for row in res]
-            return res
-        return []
+        res = cursor.fetchall()
+        
+        if DB_CONNECTION == 'sqlite':
+            return [dict(r) for r in res]
+            
+        if res and isinstance(res[0], tuple):
+            cols = [desc[0] for desc in cursor.description]
+            res = [dict(zip(cols, row)) for row in res]
+        return res
     except Exception as e:
         print(f"[DB ERROR] fetch_active_keywords: {e}")
         return []
@@ -99,8 +161,8 @@ def save_scraped_post(project_id, platform, external_id, title, content, author,
         return 999
         
     cursor = conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
-        # Check if already exists
         cursor.execute("SELECT id FROM posts WHERE platform = %s AND external_id = %s", (platform, external_id))
         row = cursor.fetchone()
         if row:
@@ -126,6 +188,7 @@ def save_lead(post_id, project_id, contact_name, contact_email, score, intent_ca
         return 999
         
     cursor = conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
         # Check if lead already exists for this post
         cursor.execute("SELECT id FROM leads WHERE post_id = %s", (post_id,))
@@ -137,6 +200,7 @@ def save_lead(post_id, project_id, contact_name, contact_email, score, intent_ca
             "INSERT INTO leads (post_id, project_id, contact_name, contact_email, score, intent_category, status, notes, generated_reply, created_at, updated_at) VALUES (%s, %s, %s, %s, %s, %s, 'New', %s, %s, %s, %s)",
             (post_id, project_id, contact_name, contact_email, score, intent_category, notes, generated_reply, now, now)
         )
+        
         # Also update post status to Qualified
         cursor.execute("UPDATE posts SET status = 'Qualified' WHERE id = %s", (post_id,))
         
@@ -165,6 +229,7 @@ def update_keyword_scraped_time(keyword_id):
     if not conn:
         return
     cursor = conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
         now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute("UPDATE keywords SET last_scraped_at = %s, updated_at = %s WHERE id = %s", (now, now, keyword_id))
@@ -174,8 +239,6 @@ def update_keyword_scraped_time(keyword_id):
     finally:
         cursor.close()
 
-import json
-
 def add_queue_task(client_id, task_type, payload_dict):
     conn = get_connection()
     if not conn:
@@ -183,6 +246,7 @@ def add_queue_task(client_id, task_type, payload_dict):
         return 999
     
     cursor = conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
         now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
         payload_str = json.dumps(payload_dict)
@@ -203,31 +267,36 @@ def fetch_next_pending_task():
     if not conn:
         return None
     
-    is_mysql_connector = "mysql.connector" in type(conn).__module__
+    is_mysql_connector = False
+    if DB_CONNECTION != 'sqlite':
+        is_mysql_connector = "mysql.connector" in type(conn).__module__
+        
     cursor = conn.cursor(dictionary=True) if is_mysql_connector else conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
-        # Turn off autocommit temporarily to open a transaction block for row-level locks
-        try:
-            conn.autocommit = False
-        except:
-            pass
+        if DB_CONNECTION != 'sqlite':
+            try:
+                conn.autocommit = False
+            except:
+                pass
             
         cursor.execute("SELECT * FROM queue_tasks WHERE status = 'Pending' ORDER BY id ASC LIMIT 1 FOR UPDATE")
         res = cursor.fetchone()
         if not res:
-            try:
-                conn.commit()
-                conn.autocommit = True
-            except:
-                pass
+            if DB_CONNECTION != 'sqlite':
+                try:
+                    conn.commit()
+                    conn.autocommit = True
+                except:
+                    pass
             return None
         
-        # Convert tuple to dict if not dictionary cursor
-        if res and isinstance(res, tuple):
+        if DB_CONNECTION == 'sqlite':
+            res = dict(res)
+        elif res and isinstance(res, tuple):
             cols = [desc[0] for desc in cursor.description]
             res = dict(zip(cols, res))
         
-        # De-serialize payload
         if "payload" in res and isinstance(res["payload"], str):
             try:
                 res["payload"] = json.loads(res["payload"])
@@ -235,7 +304,6 @@ def fetch_next_pending_task():
                 pass
         
         task_id = res["id"]
-        # Update state to Processing immediately to lock it
         now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
         
         cursor.execute(
@@ -244,19 +312,20 @@ def fetch_next_pending_task():
         )
         conn.commit()
         
-        # Restore autocommit mode
-        try:
-            conn.autocommit = True
-        except:
-            pass
+        if DB_CONNECTION != 'sqlite':
+            try:
+                conn.autocommit = True
+            except:
+                pass
             
         return res
     except Exception as e:
-        try:
-            conn.rollback()
-            conn.autocommit = True
-        except:
-            pass
+        if DB_CONNECTION != 'sqlite':
+            try:
+                conn.rollback()
+                conn.autocommit = True
+            except:
+                pass
         print(f"[DB ERROR] fetch_next_pending_task: {e}")
         return None
     finally:
@@ -267,9 +336,9 @@ def reset_orphaned_tasks():
     if not conn:
         return
     cursor = conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
         now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
-        # Reset Processing tasks back to Pending
         cursor.execute("UPDATE queue_tasks SET status = 'Pending', error_message = 'Worker crash recovery reset', updated_at = %s WHERE status = 'Processing'", (now,))
         conn.commit()
         print("[DB] Automatically reset any orphaned 'Processing' tasks back to 'Pending'.")
@@ -278,7 +347,6 @@ def reset_orphaned_tasks():
     finally:
         cursor.close()
 
-
 def update_task_status(task_id, status, error_message=None, result_path=None):
     conn = get_connection()
     if not conn:
@@ -286,6 +354,7 @@ def update_task_status(task_id, status, error_message=None, result_path=None):
         return
     
     cursor = conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
         now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute(
@@ -302,12 +371,19 @@ def fetch_task_by_id(task_id):
     conn = get_connection()
     if not conn:
         return None
-    is_mysql_connector = "mysql.connector" in type(conn).__module__
+    is_mysql_connector = False
+    if DB_CONNECTION != 'sqlite':
+        is_mysql_connector = "mysql.connector" in type(conn).__module__
+        
     cursor = conn.cursor(dictionary=True) if is_mysql_connector else conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
         cursor.execute("SELECT * FROM queue_tasks WHERE id = %s", (task_id,))
         res = cursor.fetchone()
-        if res and isinstance(res, tuple):
+        
+        if DB_CONNECTION == 'sqlite' and res:
+            res = dict(res)
+        elif res and isinstance(res, tuple):
             cols = [desc[0] for desc in cursor.description]
             res = dict(zip(cols, res))
         return res
@@ -322,6 +398,7 @@ def update_post_image(post_id, image_url):
     if not conn:
         return
     cursor = conn.cursor()
+    cursor = patch_cursor(cursor)
     try:
         now = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None).strftime('%Y-%m-%d %H:%M:%S')
         cursor.execute("UPDATE posts SET image_url = %s, updated_at = %s WHERE id = %s", (image_url, now, post_id))
@@ -331,4 +408,3 @@ def update_post_image(post_id, image_url):
         print(f"[DB ERROR] update_post_image: {e}")
     finally:
         cursor.close()
-

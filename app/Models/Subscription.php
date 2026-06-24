@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Subscription extends Model
 {
-    protected $fillable = ['user_id', 'tier', 'status', 'limits_json', 'billing_cycle_ends_at'];
+    protected $fillable = ['user_id', 'tier', 'status', 'credits', 'limits_json', 'billing_cycle_ends_at'];
 
     protected $casts = [
         'limits_json' => 'array',

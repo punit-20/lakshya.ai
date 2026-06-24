@@ -34,6 +34,7 @@ def load_env(env_path="../.env"):
 # Load settings
 env_config = load_env()
 
+DB_CONNECTION = env_config.get("DB_CONNECTION", "sqlite")
 DB_HOST = env_config.get("DB_HOST", "127.0.0.1")
 DB_PORT = int(env_config.get("DB_PORT", "3306"))
 DB_DATABASE = env_config.get("DB_DATABASE", "lakshya")

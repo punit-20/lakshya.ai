@@ -1,0 +1,83 @@
+/* main.css – Cyber‑punk dark mode palette */
+:root {
+  --primary-color: #6366f1; /* indigo-500 */
+  --accent-color: #ec4899; /* pink-500 */
+  --bg-color: #0f172a; /* slate-900 */
+  --text-color: #e2e8f0; /* slate-200 */
+  --border-color: rgba(255,255,255,0.1);
+  --primary-gradient: linear-gradient(135deg, #6366f1, #ec4899);
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Inter', sans-serif;
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+/* Preloader */
+#preloader {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Header */
+header.main-header {
+  position: sticky;
+  top: 0;
+  background: rgba(15,23,42,0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.8rem 2rem;
+  border-bottom: 1px solid var(--border-color);
+  z-index: 1000;
+}
+
+nav.main-nav a {
+  color: var(--text-color);
+  margin: 0 1rem;
+  text-decoration: none;
+  position: relative;
+}
+nav.main-nav a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  height: 2px;
+  width: 100%;
+  background: var(--accent-color);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+nav.main-nav a:hover::after { transform: scaleX(1); }
+
+/* Hamburger */
+.hamburger { display: none; cursor: pointer; }
+.hamburger div { width: 25px; height: 3px; background: var(--text-color); margin: 5px 0; transition: 0.4s; }
+@media (max-width: 768px) {
+  .hamburger { display: block; }
+  nav.main-nav { display: none; flex-direction: column; background: var(--bg-color); position: absolute; top: 100%; left: 0; width: 100%; }
+  nav.main-nav.active { display: flex; }
+}
+
+/* Footer */
+footer.main-footer { background: var(--bg-color); padding: 2rem; text-align: center; border-top: 1px solid var(--border-color); }
+footer.main-footer a { color: var(--accent-color); text-decoration: none; margin: 0 0.5rem; }
+
+/* Scroll animations */
+.animate { opacity: 1; transform: translateY(0); transition: all 0.6s ease-out; }
+[data-animate] { opacity: 0; transform: translateY(30px); }
+
+/* Dark mode toggle (optional) */
+.toggle-dark { cursor: pointer; }

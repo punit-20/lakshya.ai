@@ -432,35 +432,27 @@ Lakshya includes a built-in SaaS economics dashboard tracking real P&L:
 | 🟢 Starter | ₹1,499/mo | Standard crawling, AI scoring |
 | 🟣 Pro | ₹4,999/mo | Priority crawling, advanced analytics |
 
-### Operational Costs (OPEX)
-
-| Category | Monthly Cost |
-|---|---|
-| 👤 Customer Care | ₹8,000 |
-| 📢 Ad Spend | ₹5,000 |
-| ☁️ Google VM Instances | ₹2,500 |
-| 🌐 Web Hosting | ₹1,500 |
-| 🤖 Gemini AI API | ₹1,000 |
-| **Total OPEX** | **₹18,000** |
-
----
-
 ## 🛣️ Roadmap
 
+### Completed Core Milestones
 - [x] Multi-platform social scraping (Reddit, Twitter, LinkedIn)
-- [x] Gemini AI lead qualification & scoring
-- [x] CRM Kanban pipeline management
-- [x] VM Agent background crawler daemon
-- [x] SaaS economics & P&L dashboard
-- [x] AI marketing content generator
-- [x] Multi-tenant client management
-- [ ] 🔐 Full authentication system (login/register)
-- [ ] 📧 Email notification workflows
-- [ ] 🔗 Webhook integrations (Slack, Discord)
-- [ ] 📱 Mobile-responsive PWA
-- [ ] 🌍 Multi-language support
-- [ ] 📈 Advanced A/B testing for outreach
-- [ ] 🔄 Real-time WebSocket updates
+- [x] Gemini AI lead qualification & intent scoring
+- [x] CRM Kanban pipeline board & lead management
+- [x] Background VM Agent crawler daemon
+- [x] SaaS Economics & P&L analytics dashboard
+- [x] AI marketing content generators (Social, Growth, and Ad suites)
+- [x] Multi-tenant client directories and admin simulation impersonation mode
+- [x] **AI Agents Portal** (Visitor tracking stream, WhatsApp templates, LinkedIn logs, Queue terminal consoles)
+
+### Uncompleted Production-Ready Roadmap Tasks
+- [ ] 🔐 **SMTP/OAuth Mail Warmup**: Implement real Gmail/Outlook APIs for secure automated outbound sequences.
+- [ ] 💬 **Meta WhatsApp Business API Integration**: Configure official Meta gateway tokens and message template templates.
+- [ ] 💼 **Production LinkedIn Outbox Session Manager**: Integrate cookie rotation or official LinkedIn API pipelines for automated messaging.
+- [ ] ⚙️ **Process Daemon Manager**: Set up PM2 or Systemd service configuration for `agent_worker.py` daemon persistence in production.
+- [ ] 🌐 **Production Database Migration**: Move from local SQLite to a robust MySQL or PostgreSQL server.
+- [ ] 🔗 **Webhooks & Instant Slack/Discord Notifications** for new high-intent leads.
+- [ ] 📱 **Mobile-responsive PWA** interface for on-the-go CRM updates.
+- [ ] 🔒 **Full Auth Multi-Factor Authentication (MFA)** for client users.
 
 ---
 

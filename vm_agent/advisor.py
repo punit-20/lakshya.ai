@@ -15,7 +15,7 @@ def qualify_and_draft(post_content, author, platform, project_pitch="our product
     Qualifies the lead score (0-100), extracts intent, and drafts a reply.
     Uses Gemini API if SDK is present and key is set. Otherwise, uses rules.
     """
-    if HAS_GEMINI_SDK and GEMINI_API_KEY:
+    if HAS_GEMINI_SDK and GEMINI_API_KEY and not GEMINI_API_KEY.startswith('AQ.') and not GEMINI_API_KEY.startswith('mock'):
         try:
             print(Fore.MAGENTA + "[AI-ADVISOR] Calling Gemini API (google-genai) for lead qualification...")
             client = genai.Client(api_key=GEMINI_API_KEY, http_options={'timeout': 3.0})

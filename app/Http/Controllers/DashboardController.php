@@ -98,6 +98,7 @@ class DashboardController extends Controller
         
         $liveNetProfit = $liveMRR - 18000; // MRR minus OPEX
         $profitTargetProgress = round(($liveMRR / 38000) * 100);
+        $nsfwViolations = AuditLog::where('action', 'like', 'NSFW Security Block%')->count();
 
         // Dynamic VM Status Check
         $vmStatus = 'Offline';
@@ -133,6 +134,7 @@ class DashboardController extends Controller
             'liveMRR',
             'liveNetProfit',
             'profitTargetProgress',
+            'nsfwViolations',
             'vmStatus',
             'vmUptime',
             'vmStats'

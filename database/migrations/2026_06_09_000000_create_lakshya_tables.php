@@ -108,6 +108,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->string('tier')->default('Free'); // Free, Pro, Enterprise
             $table->string('status')->default('Active'); // Active, Expired
+            $table->integer('credits')->default(0);
             $table->json('limits_json')->nullable();
             $table->timestamp('billing_cycle_ends_at')->nullable();
             $table->timestamps();
@@ -131,10 +132,21 @@ return new class extends Migration
             $table->string('ip_address')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('credit_usage_logs', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('lead_id')->nullable()->constrained('leads')->onDelete('set null');
+            $table->string('action');
+            $table->integer('credits_used');
+            $table->text('details')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('credit_usage_logs');
         Schema::dropIfExists('audit_logs');
         Schema::dropIfExists('invoices');
         Schema::dropIfExists('subscriptions');

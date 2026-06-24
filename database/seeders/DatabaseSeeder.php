@@ -58,6 +58,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $user->id,
             'tier' => 'Pro',
             'status' => 'Active',
+            'credits' => 1000,
             'limits_json' => [
                 'leads_monthly' => 1000,
                 'scrapes_daily' => 5000,
@@ -71,6 +72,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $client1->id,
             'tier' => 'Pro',
             'status' => 'Active',
+            'credits' => 485,
             'limits_json' => ['leads_monthly' => 1000, 'scrapes_daily' => 5000, 'keywords_limit' => 25],
             'billing_cycle_ends_at' => Carbon::now()->addDays(20),
         ]);
@@ -79,6 +81,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $client2->id,
             'tier' => 'Starter',
             'status' => 'Active',
+            'credits' => 150,
             'limits_json' => ['leads_monthly' => 100, 'scrapes_daily' => 500, 'keywords_limit' => 5],
             'billing_cycle_ends_at' => Carbon::now()->addDays(15),
         ]);
@@ -87,6 +90,7 @@ class DatabaseSeeder extends Seeder
             'user_id' => $client3->id,
             'tier' => 'Pro',
             'status' => 'Active',
+            'credits' => 485,
             'limits_json' => ['leads_monthly' => 1000, 'scrapes_daily' => 5000, 'keywords_limit' => 25],
             'billing_cycle_ends_at' => Carbon::now()->addDays(28),
         ]);
@@ -468,6 +472,122 @@ Let's do a quick call to check out your mockups: schedule a free 15-minute consu
             'target_table' => 'posts',
             'ip_address' => '192.168.10.4',
         ]);
+
+        // Seed AI Website Visitor Hits
+        \App\Models\VisitorHit::create([
+            'project_id' => $project1->id,
+            'ip_address' => '203.0.113.15',
+            'company_name' => 'Acme Solutions Inc.',
+            'pages_visited' => ['/pricing', '/services/custom-chatbots', '/checkout'],
+            'intent_score' => 95,
+        ]);
+
+        \App\Models\VisitorHit::create([
+            'project_id' => $project1->id,
+            'ip_address' => '192.168.1.50',
+            'company_name' => 'Microsoft Corporation',
+            'pages_visited' => ['/pricing', '/case-studies/finance-bot'],
+            'intent_score' => 85,
+        ]);
+
+        \App\Models\VisitorHit::create([
+            'project_id' => $project1->id,
+            'ip_address' => '198.51.100.82',
+            'company_name' => 'TechGrowth LLC',
+            'pages_visited' => ['/features'],
+            'intent_score' => 45,
+        ]);
+
+        // Seed WhatsApp Outreach Logs
+        \App\Models\WhatsappLog::create([
+            'project_id' => $project1->id,
+            'lead_id' => 4, // saas_bootstrapper
+            'phone_number' => '+919876543210',
+            'message' => "Hey Josh! Noticed your post seeking mobile app development partners. We build clean native iOS/Android apps within your budget range. Check our portfolio: https://lakshya.ai/consult",
+            'status' => 'Replied',
+            'reply_message' => "Hey there! The portfolio looks clean. Let's hop on a call this Friday.",
+            'sentiment' => 'Positive',
+        ]);
+
+        \App\Models\WhatsappLog::create([
+            'project_id' => $project1->id,
+            'lead_id' => 3, // code_builder
+            'phone_number' => '+15550192834',
+            'message' => "Hello u/code_builder! We partner with agencies to outsource development and configure automation pipelines. Let's sync up.",
+            'status' => 'Delivered',
+        ]);
+
+        // Seed LinkedIn Outreach Logs
+        \App\Models\LinkedinLog::create([
+            'project_id' => $project1->id,
+            'lead_id' => 4, // saas_bootstrapper
+            'profile_url' => 'https://linkedin.com/in/saas_bootstrapper',
+            'action_type' => 'Profile Visit',
+            'status' => 'Completed',
+        ]);
+
+        \App\Models\LinkedinLog::create([
+            'project_id' => $project1->id,
+            'lead_id' => 4, // saas_bootstrapper
+            'profile_url' => 'https://linkedin.com/in/saas_bootstrapper',
+            'action_type' => 'Connection Request',
+            'message' => "Hi Josh, I saw your post looking to build startup iOS/Android apps. Let's connect here to chat further.",
+            'status' => 'Completed',
+        ]);
+
+        // Seed Agent Tasks, Runs, and Step-by-Step Console Logs
+        $task1 = \App\Models\AgentTask::create([
+            'project_id' => $project1->id,
+            'agent_type' => 'EmailAgent',
+            'task_name' => 'Draft and send cold outreach to josh@saasbootcamp.com',
+            'payload' => ['recipient' => 'josh@saasbootcamp.com', 'tone' => 'Professional'],
+            'status' => 'Completed',
+        ]);
+
+        $run1 = \App\Models\AgentRun::create([
+            'agent_task_id' => $task1->id,
+            'status' => 'Success',
+            'started_at' => Carbon::now()->subMinutes(45),
+            'completed_at' => Carbon::now()->subMinutes(44),
+            'result_data' => ['email_id' => 12, 'delivery' => 'SMTP Success'],
+        ]);
+
+        \App\Models\AgentLog::create(['agent_run_id' => $run1->id, 'level' => 'INFO', 'message' => 'Initializing EmailAgent session...']);
+        \App\Models\AgentLog::create(['agent_run_id' => $run1->id, 'level' => 'INFO', 'message' => 'Resolving target lead profile: u/saas_bootstrapper']);
+        \App\Models\AgentLog::create(['agent_run_id' => $run1->id, 'level' => 'INFO', 'message' => 'Calling Gemini AI using gemini-2.5-flash with outreach prompt...']);
+        \App\Models\AgentLog::create(['agent_run_id' => $run1->id, 'level' => 'INFO', 'message' => 'Personalized cold pitch generated successfully.']);
+        \App\Models\AgentLog::create(['agent_run_id' => $run1->id, 'level' => 'INFO', 'message' => 'Sending outbound email to josh@saasbootcamp.com via SMTP integration...']);
+        \App\Models\AgentLog::create(['agent_run_id' => $run1->id, 'level' => 'INFO', 'message' => 'Outreach email successfully sent and tracked in database.']);
+
+        $task2 = \App\Models\AgentTask::create([
+            'project_id' => $project1->id,
+            'agent_type' => 'WhatsAppAgent',
+            'task_name' => 'Send automated WhatsApp pitch to u/saas_bootstrapper',
+            'payload' => ['phone' => '+919876543210'],
+            'status' => 'Completed',
+        ]);
+
+        $run2 = \App\Models\AgentRun::create([
+            'agent_task_id' => $task2->id,
+            'status' => 'Success',
+            'started_at' => Carbon::now()->subMinutes(30),
+            'completed_at' => Carbon::now()->subMinutes(29),
+            'result_data' => ['gateway_msg_id' => 'wa_9922883311', 'status' => 'sent'],
+        ]);
+
+        \App\Models\AgentLog::create(['agent_run_id' => $run2->id, 'level' => 'INFO', 'message' => 'Initializing WhatsAppAgent session...']);
+        \App\Models\AgentLog::create(['agent_run_id' => $run2->id, 'level' => 'INFO', 'message' => 'Formulating custom message body referencing target budget and mobile requirements...']);
+        \App\Models\AgentLog::create(['agent_run_id' => $run2->id, 'level' => 'INFO', 'message' => 'Dispatching outbound payload via API provider gateway...']);
+        \App\Models\AgentLog::create(['agent_run_id' => $run2->id, 'level' => 'INFO', 'message' => 'Message successfully delivered to +919876543210. Monitoring thread replies.']);
+
+        \App\Models\AgentTask::create([
+            'project_id' => $project1->id,
+            'agent_type' => 'LeadHunterAgent',
+            'task_name' => 'Crawl social platforms for keyword "integrate AI chatbot website"',
+            'payload' => ['keywords' => ['integrate AI chatbot website']],
+            'status' => 'Pending',
+        ]);
     }
 }
+
 
