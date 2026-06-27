@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/Gemini_AI-API-8E75B2?style=for-the-badge&logo=google&logoColor=white" alt="Gemini AI" />
   <img src="https://img.shields.io/badge/TailwindCSS-4.0-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="TailwindCSS" />
-  <img src="https://img.shields.io/badge/SQLite-Database-003B57?style=for-the-badge&logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/MySQL-Database-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
   <img src="https://img.shields.io/badge/Vite-7.0-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge" alt="License" />
 </p>
@@ -36,7 +36,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" />
+  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" />
   <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
   <img src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" />
   <img src="https://img.shields.io/badge/Google_Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white" />
@@ -138,7 +138,7 @@
               └──────┬──────┘  ← Billing & Quotas
                      │
               ┌──────▼──────┐
-              │   SQLite    │
+              │    MySQL    │
               │   Database  │
               └─────────────┘
 ```
@@ -257,14 +257,12 @@ lakshya.ai/
 │   ├── advisor.py                         # Gemini AI lead qualifier
 │   ├── worker.py                          # Background task worker
 │   ├── automation.py                      # Workflow automation scripts
-│   ├── db.py                              # Database connector (SQLite)
+│   ├── db.py                              # Database connector (MySQL)
 │   ├── api.py                             # Flask REST API server
 │   ├── config.py                          # Environment configuration
 │   └── requirements.txt                   # Python dependencies
 │
-├── 📂 database/
-│   ├── migrations/                        # Schema definitions
-│   └── database.sqlite                    # Application database
+│   └── database/                          # Database migrations & configuration
 │
 ├── 📂 routes/
 │   └── web.php                            # All route definitions
@@ -290,7 +288,7 @@ lakshya.ai/
 | Composer | Latest | PHP dependency manager |
 | Node.js | 18+ | Frontend build tooling |
 | Python | 3.10+ | VM Agent crawler service |
-| SQLite | 3.x | Application database |
+| MySQL / MariaDB | 8.0+ | Application database |
 
 ### 1️⃣ Clone the Repository
 
@@ -325,8 +323,13 @@ Edit `.env` and configure your API keys:
 # Required for AI features
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Database (SQLite by default — zero config)
-DB_CONNECTION=sqlite
+# Database Configuration (MySQL)
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=lakshya
+DB_USERNAME=root
+DB_PASSWORD=
 ```
 
 ### 4️⃣ Database Migration
@@ -363,7 +366,7 @@ http://localhost:8000/admin/dashboard
 | Variable | Required | Description |
 |---|---|---|
 | `GEMINI_API_KEY` | ✅ Yes | Google Gemini API key for AI features |
-| `DB_CONNECTION` | ✅ Yes | Database driver (`sqlite` by default) |
+| `DB_CONNECTION` | ✅ Yes | Database driver (`mysql` / XAMPP) |
 | `REDDIT_CLIENT_ID` | ⬜ Optional | Reddit API OAuth client ID |
 | `REDDIT_CLIENT_SECRET` | ⬜ Optional | Reddit API OAuth client secret |
 | `APP_URL` | ✅ Yes | Application base URL |
@@ -451,13 +454,13 @@ Lakshya includes a built-in SaaS economics dashboard tracking real P&L:
 - [x] AI marketing content generators (Social, Growth, and Ad suites)
 - [x] Multi-tenant client directories and admin simulation impersonation mode
 - [x] **AI Agents Portal** (Visitor tracking stream, WhatsApp templates, LinkedIn logs, Queue terminal consoles)
+- [x] 🌐 **Production Database Migration**: Configured robust MySQL integration (migrated from SQLite)
 
 ### Uncompleted Production-Ready Roadmap Tasks
 - [ ] 🔐 **SMTP/OAuth Mail Warmup**: Implement real Gmail/Outlook APIs for secure automated outbound sequences.
 - [ ] 💬 **Meta WhatsApp Business API Integration**: Configure official Meta gateway tokens and message template templates.
 - [ ] 💼 **Production LinkedIn Outbox Session Manager**: Integrate cookie rotation or official LinkedIn API pipelines for automated messaging.
 - [ ] ⚙️ **Process Daemon Manager**: Set up PM2 or Systemd service configuration for `agent_worker.py` daemon persistence in production.
-- [ ] 🌐 **Production Database Migration**: Move from local SQLite to a robust MySQL or PostgreSQL server.
 - [ ] 🔗 **Webhooks & Instant Slack/Discord Notifications** for new high-intent leads.
 - [ ] 📱 **Mobile-responsive PWA** interface for on-the-go CRM updates.
 - [ ] 🔒 **Full Auth Multi-Factor Authentication (MFA)** for client users.
