@@ -417,6 +417,14 @@ python vm_agent/runner.py --single
 |---|---|---|
 | `/status` | GET | Health check & uptime stats |
 | `/trigger` | POST | Trigger immediate crawl cycle |
+| `/publish-log` | POST | Intercepts standard output prints from Python daemons |
+| `/get-logs` | GET | Retrieves incremental daemon outputs in a structured JSON schema |
+
+### 📺 Real-Time Terminal Log Stream
+Lakshya features a high-performance console log viewer built into the CRM dashboard:
+- **Zero-DB Log Capture**: Captures console prints from python daemons in memory without writing heavy trace logs into SQL, eliminating database bloat.
+- **Non-Blocking JSON Polling**: Integrates incremental client-side JSON polling to prevent request buffering, proxy timeouts, or socket exhaustion.
+- **Premium Terminal Styling**: Displays logs in a dark-themed macOS style shell window, color-coding log details (Scraper actions, qualifications, intents, errors) dynamically based on print patterns.
 
 ---
 
