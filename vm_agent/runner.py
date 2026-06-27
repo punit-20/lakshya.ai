@@ -41,6 +41,9 @@ def check_and_install_dependencies():
 # Check dependencies before executing imports that rely on them
 check_and_install_dependencies()
 
+from remote_logger import setup_remote_logging
+setup_remote_logging()
+
 import time
 import argparse
 from colorama import init, Fore, Back, Style

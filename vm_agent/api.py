@@ -32,11 +32,35 @@ def check_and_install_dependencies():
 
 check_and_install_dependencies()
 
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
+import queue
 from colorama import init, Fore, Style
 
 # Initialize colorama
 init(autoreset=True)
+
+import logging
+
+class ColorRequestsFormatter(logging.Formatter):
+    def format(self, record):
+        msg = record.getMessage()
+        if "POST /publish-log" in msg or "GET /get-logs" in msg:
+            return Fore.LIGHTBLACK_EX + msg
+        elif " 200 " in msg or " 201 " in msg:
+            return Fore.GREEN + msg
+        elif " 301 " in msg or " 302 " in msg or " 304 " in msg:
+            return Fore.YELLOW + msg
+        elif " 404 " in msg or " 400 " in msg:
+            return Fore.RED + msg
+        elif " 500 " in msg:
+            return Fore.RED + Style.BRIGHT + msg
+        return msg
+
+log = logging.getLogger('werkzeug')
+handler = logging.StreamHandler()
+handler.setFormatter(ColorRequestsFormatter())
+log.addHandler(handler)
+log.propagate = False
 
 # Imports from vm_agent folder
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -44,7 +68,19 @@ from db import fetch_active_keywords, save_scraped_post, save_lead, update_keywo
 from scraper import simulate_platform_scrape
 from advisor import qualify_and_draft
 
+import collections
+
 app = Flask(__name__)
+log_buffer = collections.deque(maxlen=1000)
+log_counter = 0
+
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
+    response.headers['Access-Control-Allow-Methods'] = 'GET,POST,OPTIONS'
+    return response
+
 start_time = time.time()
 last_run_time = None
 last_run_stats = {}
@@ -152,8 +188,8 @@ def trigger():
     except Exception as e:
         import traceback
         tb_str = traceback.format_exc()
-        print(f"[API-ERROR] Scrape trigger failed: {e}")
-        print(tb_str)
+        print(Fore.RED + Style.BRIGHT + f"[API-ERROR] Scrape trigger failed: {e}")
+        print(Fore.RED + tb_str)
         return jsonify({
             "success": False,
             "error": str(e),
@@ -234,7 +270,7 @@ def scrape_instant():
         })
         
     except Exception as e:
-        print(f"[API-ERROR] Instant scrape failed: {e}")
+        print(Fore.RED + Style.BRIGHT + f"[API-ERROR] Instant scrape failed: {e}")
         return jsonify({
             "success": False,
             "error": str(e)
@@ -250,7 +286,7 @@ def queue_task():
     if not task_type or not payload:
         return jsonify({"success": False, "error": "Missing parameters 'task_type' or 'payload'"}), 400
         
-    print(f"[API-QUEUE] Enqueuing new task of type: {task_type}")
+    print(Fore.CYAN + Style.BRIGHT + f"[API-QUEUE] Enqueuing new task of type: {task_type}")
     task_id = add_queue_task(client_id, task_type, payload)
     if task_id:
         return jsonify({
@@ -278,6 +314,38 @@ def task_status(task_id):
         "result_path": task["result_path"],
         "created_at": str(task["created_at"]),
         "updated_at": str(task["updated_at"])
+    })
+
+
+@app.route("/publish-log", methods=["POST"])
+def publish_log():
+    global log_counter
+    data = request.json or {}
+    message = data.get("message", "")
+    if message:
+        log_counter += 1
+        log_entry = {
+            "id": log_counter,
+            "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
+            "message": message
+        }
+        log_buffer.append(log_entry)
+    return jsonify({"success": True})
+
+@app.route("/get-logs", methods=["GET"])
+def get_logs():
+    last_id = request.args.get("last_id", default=0, type=int)
+    if last_id == -1:
+        return jsonify({
+            "success": True,
+            "logs": [],
+            "last_id": log_counter
+        })
+    new_logs = [log for log in log_buffer if log["id"] > last_id]
+    return jsonify({
+        "success": True,
+        "logs": new_logs,
+        "last_id": log_counter
     })
 
 

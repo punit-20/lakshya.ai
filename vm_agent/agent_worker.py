@@ -44,6 +44,8 @@ init(autoreset=True)
 
 # Add current folder to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+from remote_logger import setup_remote_logging
+setup_remote_logging()
 from db import get_connection, patch_cursor, DB_CONNECTION
 
 # Helper to write agent logs into the database

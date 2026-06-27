@@ -156,28 +156,40 @@
 
     /* Terminal Console Panel styles */
     .console-panel {
-        background: #05080e;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        border-radius: 12px;
-        font-family: 'Consolas', 'Courier New', monospace;
-        color: #38bdf8;
-        padding: 1rem;
+        background: #020408;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        border-radius: 0 0 12px 12px;
+        font-family: 'Consolas', 'Fira Code', 'Courier New', monospace;
+        color: #e2e8f0;
+        padding: 1.25rem;
         font-size: 0.8rem;
-        height: 250px;
+        height: 380px;
         overflow-y: auto;
-        box-shadow: inset 0 2px 8px rgba(0,0,0,0.8);
+        box-shadow: inset 0 4px 20px rgba(0,0,0,0.9);
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255,255,255,0.1) transparent;
+    }
+
+    .console-panel::-webkit-scrollbar {
+        width: 6px;
+    }
+    .console-panel::-webkit-scrollbar-thumb {
+        background-color: rgba(255,255,255,0.1);
+        border-radius: 3px;
     }
 
     .console-line {
-        line-height: 1.5;
-        margin-bottom: 0.35rem;
+        line-height: 1.6;
+        margin-bottom: 0.4rem;
         white-space: pre-wrap;
+        border-left: 2px solid transparent;
+        padding-left: 8px;
     }
 
-    .console-line.info { color: #a2a1a1; }
-    .console-line.success { color: #34d399; }
-    .console-line.warning { color: #fbbf24; }
-    .console-line.error { color: #f87171; font-weight: bold; }
+    .console-line.info { border-left-color: #4b5563; }
+    .console-line.success { border-left-color: #10b981; }
+    .console-line.warning { border-left-color: #f59e0b; }
+    .console-line.error { border-left-color: #ef4444; font-weight: bold; }
 
     /* Heartbeat pulses */
     .heartbeat-dot {
@@ -676,16 +688,28 @@
 
             <!-- Right Side: Live Log Terminal Console -->
             <div class="card" style="padding: 0; display: flex; flex-direction: column; overflow: hidden; background: #04070c;">
-                <div style="padding: 1.25rem; border-bottom: 1px solid var(--border-color); background-color: rgba(22, 30, 49, 0.4);">
-                    <h2 id="console-title" style="font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 0.25rem;">Select an agent task to view live execution logs</h2>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">
-                        <span id="console-agent-type">Agent: --</span> &nbsp;|&nbsp; <span id="console-task-status">Status: --</span>
+                <div style="padding: 1.25rem; border-bottom: 1px solid var(--border-color); background-color: rgba(22, 30, 49, 0.4); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 id="console-title" style="font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 0.25rem;">Select an agent task to view live execution logs</h2>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                            <span id="console-agent-type">Agent: --</span> &nbsp;|&nbsp; <span id="console-task-status">Status: --</span>
+                        </div>
                     </div>
+                    <button class="btn btn-secondary" id="btn-stream-logs" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;" onclick="toggleLiveStream()">
+                        🟢 Stream Live RDP Console
+                    </button>
                 </div>
                 
-                <div style="flex-grow: 1; padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column;" id="console-wrapper">
+                <div style="padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1;">
+                    <!-- Terminal Window Header Bar (macOS Style) -->
+                    <div style="display: flex; gap: 6px; padding: 0.6rem 1rem; background: #0f172a; border-radius: 12px 12px 0 0; border: 1px solid rgba(255,255,255,0.05); border-bottom: none; align-items: center;">
+                        <div style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444;"></div>
+                        <div style="width: 10px; height: 10px; border-radius: 50%; background: #eab308;"></div>
+                        <div style="width: 10px; height: 10px; border-radius: 50%; background: #22c55e;"></div>
+                        <span style="margin-left: 0.75rem; font-size: 0.7rem; font-family: monospace; color: #64748b;">bash - lakshya-rdp-daemon</span>
+                    </div>
                     <!-- Console output lines target -->
-                    <div id="console-output-target" class="console-panel" style="flex-grow: 1; height: 100%;">
+                    <div id="console-output-target" class="console-panel">
                         <div class="console-line info">[SYSTEM] Ready. Click on a task in the queue list to inspect live execution output...</div>
                     </div>
                 </div>
@@ -700,6 +724,36 @@
 <script>
     // Global data structures for JavaScript rendering
     let tasksList = @json($tasks);
+
+    function colorizeLogMessage(message) {
+        // Escape HTML to prevent injection
+        let escaped = message
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        // Color code brackets and labels
+        escaped = escaped.replace(/\[SCRAPER\]/g, '<span style="color: #c084fc; font-weight: 700;">[SCRAPER]</span>');
+        escaped = escaped.replace(/\[AI-ADVISOR\]/g, '<span style="color: #2dd4bf; font-weight: 700;">[AI-ADVISOR]</span>');
+        escaped = escaped.replace(/\[RUNNER\]/g, '<span style="color: #818cf8; font-weight: 700;">[RUNNER]</span>');
+        escaped = escaped.replace(/\[WORKER\]/g, '<span style="color: #fb923c; font-weight: 700;">[WORKER]</span>');
+        escaped = escaped.replace(/\[SYSTEM\]/g, '<span style="color: #38bdf8; font-weight: 700;">[SYSTEM]</span>');
+        escaped = escaped.replace(/\[DB\]/g, '<span style="color: #fb7185; font-weight: 700;">[DB]</span>');
+        escaped = escaped.replace(/\[SUCCESS\]/g, '<span style="color: #34d399; font-weight: 700;">[SUCCESS]</span>');
+        escaped = escaped.replace(/\[ERROR\]/g, '<span style="color: #f87171; font-weight: 700;">[ERROR]</span>');
+        escaped = escaped.replace(/\[WARNING\]/g, '<span style="color: #fbbf24; font-weight: 700;">[WARNING]</span>');
+        escaped = escaped.replace(/\[QUEUE\]/g, '<span style="color: #f472b6; font-weight: 700;">[QUEUE]</span>');
+
+        // Style status tags
+        escaped = escaped.replace(/(✔|SUCCESS|Lead Registered)/gi, '<span style="color: #34d399; font-weight: 700;">$1</span>');
+        escaped = escaped.replace(/(❌|FAILED|ERROR)/gi, '<span style="color: #f87171; font-weight: 700;">$1</span>');
+        escaped = escaped.replace(/(⚠|WARNING|skipped)/gi, '<span style="color: #fbbf24; font-weight: 700;">$1</span>');
+
+        // Style qualified intent highlights
+        escaped = escaped.replace(/(Lead Qualified!)/g, '<span style="color: #34d399; font-weight: bold; text-shadow: 0 0 4px rgba(52,211,153,0.35);">Lead Qualified!</span>');
+        
+        return escaped;
+    }
 
     function switchTab(tabId) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -745,6 +799,9 @@
     }
 
     function selectQueueTask(id) {
+        if (typeof isStreamingLogs !== 'undefined' && isStreamingLogs) {
+            toggleLiveStream();
+        }
         // Toggle selected styling in list
         document.querySelectorAll('.queue-task-item').forEach(item => {
             item.style.backgroundColor = 'rgba(255,255,255,0.02)';
@@ -780,7 +837,8 @@
                 const logDiv = document.createElement('div');
                 const lvlClass = log.level.toLowerCase(); // info, warning, error
                 logDiv.className = `console-line ${lvlClass}`;
-                logDiv.innerText = `[${log.created_at ? new Date(log.created_at).toLocaleTimeString() : 'LOG'}] [${log.level}] ${log.message}`;
+                const timeStr = log.created_at ? new Date(log.created_at).toLocaleTimeString() : 'LOG';
+                logDiv.innerHTML = `<span style="color: #64748b; font-size: 0.75rem; margin-right: 6px;">[${timeStr}]</span> ${colorizeLogMessage(log.message)}`;
                 target.appendChild(logDiv);
             });
         } else {
@@ -793,7 +851,9 @@
         }
 
         // Scroll to bottom of console
-        target.scrollTop = target.scrollHeight;
+        setTimeout(() => {
+            target.scrollTop = target.scrollHeight;
+        }, 50);
     }
 
     function dispatchAgentTask(e) {
@@ -1083,6 +1143,96 @@
                 toast.remove();
             }, 300);
         }, 4000);
+    }
+
+    // Live RDP Log Streaming Controller using AJAX JSON polling
+    let liveLogInterval = null;
+    let isStreamingLogs = false;
+    let lastLogId = 0;
+
+    function toggleLiveStream() {
+        const btn = document.getElementById('btn-stream-logs');
+        const target = document.getElementById('console-output-target');
+        
+        if (isStreamingLogs) {
+            // Disconnect stream / clear polling interval
+            if (liveLogInterval) {
+                clearInterval(liveLogInterval);
+                liveLogInterval = null;
+            }
+            isStreamingLogs = false;
+            btn.innerHTML = '🟢 Stream Live RDP Console';
+            btn.className = 'btn btn-secondary';
+            document.getElementById('console-title').innerText = 'Select an agent task to view live execution logs';
+            document.getElementById('console-agent-type').innerText = 'Agent: --';
+            document.getElementById('console-task-status').innerText = 'Status: --';
+            target.innerHTML = '<div class="console-line info">[SYSTEM] Live log stream disconnected. Click any task to inspect standard logs.</div>';
+        } else {
+            // Establish stream connection
+            isStreamingLogs = true;
+            btn.innerHTML = '🔴 Disconnect Live Feed';
+            btn.className = 'btn btn-danger';
+            document.getElementById('console-title').innerText = 'Live RDP Daemon Console Feed';
+            document.getElementById('console-agent-type').innerText = 'Source: Python daemon outputs';
+            document.getElementById('console-task-status').innerText = 'Status: Streaming...';
+            
+            // Clear console output grid
+            target.innerHTML = '<div class="console-line success">>>> Connected to Live RDP Stream! Listening for messages...</div>';
+            
+            const vmUrl = "{{ config('admin.vm.base_url') }}";
+            lastLogId = -1; // -1 instructs the backend to return current ID without historical logs
+            let isFirstFetch = true;
+
+            // Poll every 1.2 seconds for new logs
+            liveLogInterval = setInterval(() => {
+                fetch(`${vmUrl}/get-logs?last_id=${lastLogId}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (isFirstFetch) {
+                                // Initialize lastLogId to current counter to avoid printing old logs
+                                lastLogId = data.last_id;
+                                isFirstFetch = false;
+                                return;
+                            }
+                            
+                            if (data.logs && data.logs.length > 0) {
+                                data.logs.forEach(log => {
+                                    lastLogId = Math.max(lastLogId, log.id);
+                                    
+                                    const logDiv = document.createElement('div');
+                                    logDiv.className = 'console-line';
+                                    
+                                    const logLine = log.message;
+                                    // Style lines dynamically
+                                    if (logLine.includes('[SUCCESS]') || logLine.includes('✔') || logLine.includes('Qualified')) {
+                                        logDiv.className += ' success';
+                                    } else if (logLine.includes('[ERROR]') || logLine.includes('❌') || logLine.includes('FAILED')) {
+                                        logDiv.className += ' error';
+                                    } else if (logLine.includes('[WARNING]') || logLine.includes('⚠') || logLine.includes('skipped')) {
+                                        logDiv.className += ' warning';
+                                    } else {
+                                        logDiv.className += ' info';
+                                    }
+                                    
+                                    logDiv.innerHTML = `<span style="color: #64748b; font-size: 0.75rem; margin-right: 6px;">[${log.timestamp}]</span> ${colorizeLogMessage(logLine)}`;
+                                    target.appendChild(logDiv);
+                                });
+                                
+                                // Auto scroll
+                                setTimeout(() => {
+                                    target.scrollTop = target.scrollHeight;
+                                }, 50);
+                            } else if (data.last_id) {
+                                lastLogId = Math.max(lastLogId, data.last_id);
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Logs fetch error:", err);
+                    });
+            }, 1200);
+        }
     }
 
     // Auto-select first queue task on load if exists
