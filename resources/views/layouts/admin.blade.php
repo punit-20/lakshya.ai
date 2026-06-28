@@ -8,9 +8,133 @@
     
     <!-- Core Custom Styles -->
     <link rel="stylesheet" href="{{ asset('css/admin.css') }}">
+    
+    <!-- 3D Holographic Preloader Styles -->
+    <style>
+        .preloader-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: radial-gradient(circle at center, #0b0f1d 0%, #030712 100%);
+            z-index: 100000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            backdrop-filter: blur(25px);
+        }
+        .preloader-overlay.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .preloader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            perspective: 800px;
+        }
+        
+        /* 3D Rotating Cube */
+        .cube-3d {
+            width: 70px;
+            height: 70px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotate3dCube 3s infinite linear;
+            margin-bottom: 2.25rem;
+        }
+        .cube-face {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: rgba(99, 102, 241, 0.05);
+            border: 2px solid #6366f1;
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.5), inset 0 0 10px rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+        }
+        .cube-front  { transform: rotateY(  0deg) translateZ(35px); }
+        .cube-back   { transform: rotateY(180deg) translateZ(35px); }
+        .cube-left   { transform: rotateY(-90deg) translateZ(35px); }
+        .cube-right  { transform: rotateY( 90deg) translateZ(35px); }
+        .cube-top    { transform: rotateX( 90deg) translateZ(35px); }
+        .cube-bottom { transform: rotateX(-90deg) translateZ(35px); }
+        
+        @keyframes rotate3dCube {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+        
+        .preloader-title {
+            font-family: 'Outfit', 'Inter', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            letter-spacing: 7px;
+            background: linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            animation: pulseText 2s infinite ease-in-out;
+            text-shadow: 0 0 30px rgba(99,102,241,0.25);
+        }
+        .preloader-subtitle {
+            font-size: 0.75rem;
+            color: #64748b;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        .preloader-progress-bar {
+            width: 180px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .preloader-progress-fill {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            border-radius: 10px;
+            position: absolute;
+            transform: translateX(-100%);
+            animation: progressLoad 2s infinite ease-in-out;
+        }
+        
+        @keyframes progressLoad {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+        }
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.75; transform: scale(0.97); }
+            50% { opacity: 1; transform: scale(1.03); }
+        }
+    </style>
     @yield('styles')
 </head>
 <body>
+    <!-- 3D Holographic Preloader Cover -->
+    <div id="hologram-preloader" class="preloader-overlay">
+        <div class="preloader-container">
+            <!-- 3D Rotating Cube -->
+            <div class="cube-3d">
+                <div class="cube-face cube-front"></div>
+                <div class="cube-face cube-back"></div>
+                <div class="cube-face cube-left"></div>
+                <div class="cube-face cube-right"></div>
+                <div class="cube-face cube-top"></div>
+                <div class="cube-face cube-bottom"></div>
+            </div>
+            <!-- Pulsing Title -->
+            <h2 class="preloader-title">LAKSHYA.AI</h2>
+            <p class="preloader-subtitle">Loading lead intelligence...</p>
+            <div class="preloader-progress-bar">
+                <div class="preloader-progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
         
         <!-- Sidebar Navigation -->
@@ -342,6 +466,32 @@
                 }
             });
         }
+
+        // Manage preloader hide on load
+        window.addEventListener('load', () => {
+            const preloader = document.getElementById('hologram-preloader');
+            if (preloader) {
+                preloader.classList.add('fade-out');
+            }
+        });
+
+        // Display preloader on navigate/link clicks to mask RDP network latency
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('a').forEach(link => {
+                if (link.href && 
+                    !link.href.includes('#') && 
+                    !link.href.startsWith('javascript:') && 
+                    link.target !== '_blank' &&
+                    link.hostname === window.location.hostname) {
+                    link.addEventListener('click', () => {
+                        const preloader = document.getElementById('hologram-preloader');
+                        if (preloader) {
+                            preloader.classList.remove('fade-out');
+                        }
+                    });
+                }
+            });
+        });
     </script>
     @yield('scripts')
 </body>
