@@ -5,282 +5,346 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Lakshya.AI AI Boot System</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Outfit:wght@400;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Outfit:wght@400;700;800&display=swap" rel="stylesheet" />
   <style>
-    *,
-    *::before,
-    *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #02040a;
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      background: #020408;
       font-family: 'Orbitron', sans-serif;
       color: #e2e8f0;
     }
 
-    /* ── Radial Neon Circuit Canvas Background ── */
-    #bgCanvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
+    /* ══════════ SCENE LAYERS ══════════ */
+
+    /* Perspective grid canvas — behind everything */
+    #gridCanvas {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
       z-index: 0;
-      opacity: 0.85;
     }
 
-    /* ── Fullscreen Preloader Container ── */
-    .preloader-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 100;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at center, #0d091e 0%, #03040c 100%);
-      transition: all 0.9s cubic-bezier(0.77, 0, 0.175, 1);
-    }
-    
-    .preloader-screen.exit-animation {
-      opacity: 0;
-      transform: scale(1.1);
+    /* Particle canvas — above grid */
+    #particleCanvas {
+      position: fixed; top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 1;
       pointer-events: none;
-      visibility: hidden;
     }
 
-    /* ── 3D Camera / Perspective Wrapper ── */
-    .perspective-wrapper {
-      perspective: 1200px;
-      transform-style: preserve-3d;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* ══════════ PRELOADER SCREEN ══════════ */
+    .preloader-screen {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      transition: opacity 1.2s ease, transform 1.2s ease, visibility 1.2s ease;
     }
 
-    .logo-wrap {
+    .preloader-screen.exit-animation {
+      opacity: 0; transform: scale(1.15);
+      pointer-events: none; visibility: hidden;
+    }
+
+    /* ══════════ 3D SCENE CONTAINER ══════════ */
+    .scene-3d {
       position: relative;
-      transform-style: preserve-3d;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 15px;
-      transition: transform 0.1s ease-out;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      perspective: 1000px;
     }
 
+    /* Logo + text floats above the platform */
+    .floating-assembly {
+      position: relative;
+      display: flex; flex-direction: column;
+      align-items: center;
+      transform-style: preserve-3d;
+      animation: floatUpDown 4s ease-in-out infinite;
+      margin-bottom: -20px;
+      z-index: 5;
+    }
+
+    @keyframes floatUpDown {
+      0%, 100% { transform: translateY(0px) rotateX(2deg); }
+      50% { transform: translateY(-18px) rotateX(-2deg); }
+    }
+
+    /* ══════════ SVG LOGO ══════════ */
     #logoSvg {
-      width: 420px;
-      height: 420px;
+      width: 380px; height: 380px;
       overflow: visible;
-      transform-style: preserve-3d;
-      filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
+      filter:
+        drop-shadow(0 0 15px rgba(0, 229, 255, 0.4))
+        drop-shadow(0 0 40px rgba(187, 51, 238, 0.3))
+        drop-shadow(0 0 80px rgba(99, 102, 241, 0.15));
     }
 
-    /* ── Progress & Boot Sequence Layout ── */
+    /* Outer glow halo behind the logo */
+    .logo-glow-halo {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 500px; height: 500px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(0, 229, 255, 0.08) 0%,
+        rgba(187, 51, 238, 0.06) 35%,
+        rgba(0, 0, 0, 0) 70%
+      );
+      pointer-events: none;
+      animation: haloBreath 3s ease-in-out infinite alternate;
+      z-index: -1;
+    }
+
+    @keyframes haloBreath {
+      0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+    }
+
+    /* ══════════ BRAND TEXT ══════════ */
+    .brand-title-wrap {
+      display: flex; justify-content: center;
+      align-items: baseline; gap: 6px;
+      margin-top: 15px;
+    }
+
+    .brand-letter {
+      font-size: 52px; font-weight: 900;
+      color: #cc44ff; opacity: 0;
+      transform: translateY(20px) scale(0.7);
+      text-shadow: none;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .brand-letter.visible {
+      opacity: 1; transform: translateY(0) scale(1);
+      color: #dd66ff;
+      text-shadow:
+        0 0 6px #fff,
+        0 0 15px #cc44ff,
+        0 0 40px rgba(187, 51, 238, 0.7),
+        0 0 80px rgba(187, 51, 238, 0.3);
+    }
+
+    .brand-ai {
+      font-size: 42px; font-weight: 900;
+      color: #00e5ff; opacity: 0;
+      margin-left: 4px;
+      transform: translateY(10px);
+      transition: all 0.6s ease-out 0.1s;
+    }
+
+    .brand-ai.visible {
+      opacity: 1; transform: translateY(0);
+      text-shadow:
+        0 0 6px #fff,
+        0 0 15px #00ffff,
+        0 0 40px rgba(0, 229, 255, 0.6),
+        0 0 80px rgba(0, 229, 255, 0.2);
+      animation: aiPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes aiPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.3) hue-rotate(10deg); }
+    }
+
+    /* ══════════ 3D FLOATING PLATFORM ══════════ */
+    .platform-container {
+      position: relative;
+      width: 600px; height: 60px;
+      margin-top: 5px;
+      z-index: 4;
+    }
+
+    .platform-ring {
+      position: absolute; left: 50%;
+      border-radius: 50%;
+      border: 1.5px solid;
+      transform: translateX(-50%) rotateX(70deg);
+    }
+
+    .platform-ring.r1 {
+      width: 500px; height: 120px; top: -25px;
+      border-color: rgba(0, 229, 255, 0.25);
+      box-shadow:
+        0 0 15px rgba(0, 229, 255, 0.15),
+        inset 0 0 15px rgba(0, 229, 255, 0.05);
+      animation: platformPulse 3s ease-in-out infinite;
+    }
+
+    .platform-ring.r2 {
+      width: 440px; height: 105px; top: -18px;
+      border-color: rgba(187, 51, 238, 0.2);
+      box-shadow:
+        0 0 12px rgba(187, 51, 238, 0.12),
+        inset 0 0 12px rgba(187, 51, 238, 0.04);
+      animation: platformPulse 3s ease-in-out 0.5s infinite;
+    }
+
+    .platform-ring.r3 {
+      width: 380px; height: 90px; top: -12px;
+      border-color: rgba(0, 229, 255, 0.15);
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.08);
+      animation: platformPulse 3s ease-in-out 1s infinite;
+    }
+
+    /* Bright base line */
+    .platform-glow-line {
+      position: absolute; left: 50%; top: 5px;
+      width: 520px; height: 2px;
+      transform: translateX(-50%);
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(0, 229, 255, 0.6) 20%,
+        rgba(0, 229, 255, 0.9) 50%,
+        rgba(0, 229, 255, 0.6) 80%,
+        transparent 100%
+      );
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.4), 0 0 60px rgba(0, 229, 255, 0.15);
+      border-radius: 50%;
+      animation: platformPulse 3s ease-in-out infinite;
+    }
+
+    /* Reflection below platform */
+    .platform-reflection {
+      position: absolute; left: 50%; top: 15px;
+      width: 350px; height: 80px;
+      transform: translateX(-50%);
+      background: radial-gradient(ellipse,
+        rgba(0, 229, 255, 0.06) 0%,
+        rgba(187, 51, 238, 0.03) 40%,
+        transparent 70%
+      );
+      border-radius: 50%;
+    }
+
+    @keyframes platformPulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    /* ══════════ BOOT STATUS & PROGRESS ══════════ */
     .boot-status-panel {
-      width: 450px;
-      display: flex;
-      flex-direction: column;
+      width: 480px;
+      display: flex; flex-direction: column;
       align-items: center;
-      margin-top: 1.5rem;
-      z-index: 2;
+      margin-top: 30px;
+      z-index: 6;
     }
 
     .boot-message-log {
-      height: 25px;
-      font-size: 0.8rem;
+      height: 22px;
+      font-size: 0.72rem; font-weight: 500;
       font-family: 'Orbitron', monospace;
       color: #00ffcc;
-      text-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
-      margin-bottom: 0.75rem;
+      text-shadow: 0 0 12px rgba(0, 255, 204, 0.5);
+      margin-bottom: 12px;
       text-transform: uppercase;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-align: center;
-      font-weight: 700;
+      transition: all 0.3s ease;
     }
 
-    /* ═══════════════════════ Progress Bar ═══════════════════════ */
     .progress-box {
       width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      margin-bottom: 0.5rem;
+      display: flex; align-items: center;
+      gap: 14px; margin-bottom: 8px;
     }
 
     .bar-wrapper {
-      flex-grow: 1;
-      height: 14px;
+      flex-grow: 1; height: 18px;
       position: relative;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(0, 229, 255, 0.2);
-      border-radius: 4px;
+      background: rgba(0, 20, 40, 0.6);
+      border: 1.5px solid rgba(0, 229, 255, 0.25);
+      border-radius: 25px;
       overflow: hidden;
-      box-shadow: inset 0 0 6px rgba(0, 229, 255, 0.1);
+      box-shadow:
+        inset 0 0 10px rgba(0, 229, 255, 0.08),
+        0 0 15px rgba(0, 229, 255, 0.1);
     }
 
     .bar-fill {
-      width: 0%;
-      height: 100%;
-      background: repeating-linear-gradient(
-        45deg,
-        #bb33ee,
-        #bb33ee 8px,
-        #aa11dd 8px,
-        #aa11dd 16px
-      );
-      box-shadow: 0 0 12px #cc44ff;
-      border-radius: 4px;
-      transition: width 0.1s linear;
+      width: 0%; height: 100%;
+      background: linear-gradient(90deg, #00b8d4, #00e5ff, #00ffcc);
+      border-radius: 25px;
+      transition: width 0.15s linear;
       position: relative;
+      box-shadow:
+        0 0 10px rgba(0, 229, 255, 0.6),
+        0 0 25px rgba(0, 229, 255, 0.3),
+        inset 0 1px 1px rgba(255, 255, 255, 0.3);
     }
 
     .bar-fill::after {
       content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-      animation: barGlowFlow 1.5s infinite linear;
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      animation: shimmer 2s infinite linear;
+      border-radius: 25px;
     }
 
-    @keyframes barGlowFlow {
+    @keyframes shimmer {
       0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
+      100% { transform: translateX(200%); }
     }
 
     .progress-percent {
-      font-size: 0.95rem;
+      font-size: 1rem; font-weight: 900;
       color: #00e5ff;
-      text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
-      width: 48px;
-      text-align: right;
-      font-weight: 900;
+      text-shadow: 0 0 12px rgba(0, 229, 255, 0.7);
+      min-width: 48px; text-align: right;
     }
 
     .sub-brand-line {
-      font-size: 0.65rem;
-      letter-spacing: 4px;
-      color: #64748b;
-      margin-top: 0.5rem;
+      font-size: 0.6rem; font-weight: 500;
+      letter-spacing: 5px; color: rgba(100, 116, 139, 0.7);
+      margin-top: 10px;
       text-transform: uppercase;
-      font-weight: 700;
       text-align: center;
     }
 
-    /* ── LAKSHYA text letter by letter ── */
-    .brand-title-wrap {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .brand-letter {
-      font-size: 58px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      color: #bb33ee;
-      opacity: 0.1;
-      transform: scale(0.85);
-      text-shadow: 0 0 20px rgba(187, 51, 238, 0.1);
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    .brand-letter.visible {
-      opacity: 1;
-      transform: scale(1);
-      text-shadow:
-        0 0 4px #fff,
-        0 0 10px #cc44ff,
-        0 0 20px rgba(120, 0, 200, 0.6);
-    }
-
-    .brand-ai {
-      font-size: 32px;
-      font-weight: 900;
-      letter-spacing: 2px;
-      color: #00e5ff;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.4s ease-out;
-      margin-left: 10px;
-    }
-
-    .brand-ai.visible {
-      opacity: 1;
-      transform: translateY(0);
-      text-shadow:
-        0 0 4px #fff,
-        0 0 10px #00ffff,
-        0 0 20px rgba(0, 229, 255, 0.6);
-      animation: hologramGlitch 2s infinite ease-in-out;
-    }
-
-    @keyframes hologramGlitch {
-      0%, 100% { transform: skewX(0deg) scale(1); opacity: 1; }
-      49% { transform: skewX(0deg) scale(1); opacity: 1; }
-      50% { transform: skewX(5deg) scale(1.05); opacity: 0.8; filter: hue-rotate(15deg); }
-      51% { transform: skewX(-5deg) scale(0.98); opacity: 0.9; }
-      52% { transform: skewX(0deg) scale(1); opacity: 1; filter: none; }
-    }
-
-    /* ── Camera shaking / pulse effects ── */
-    .perspective-wrapper.shake-pulse {
-      animation: camShake 0.4s ease-in-out;
+    /* ══════════ CAMERA SHAKE ══════════ */
+    .scene-3d.shake-pulse {
+      animation: camShake 0.35s ease-in-out;
     }
 
     @keyframes camShake {
-      0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-      20% { transform: translate(-3px, 3px) scale(1.03) rotate(-0.5deg); }
-      40% { transform: translate(3px, -3px) scale(0.98) rotate(0.5deg); }
-      60% { transform: translate(-3px, -3px) scale(1.02) rotate(-0.3deg); }
-      80% { transform: translate(3px, 3px) scale(0.99) rotate(0.2deg); }
+      0%, 100% { transform: translate(0, 0); }
+      25% { transform: translate(-2px, 2px); }
+      50% { transform: translate(2px, -2px); }
+      75% { transform: translate(-2px, -1px); }
     }
 
-    /* ── Hidden Dashboard Reveal Panel ── */
+    /* ══════════ DASHBOARD REVEAL ══════════ */
     .dashboard-reveal-container {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 10;
-      opacity: 0;
-      visibility: hidden;
-      background: #020408;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 200;
+      opacity: 0; visibility: hidden;
+      background: radial-gradient(ellipse at center, #0d091e 0%, #020408 100%);
+      display: flex; align-items: center; justify-content: center;
       transition: opacity 1s ease 0.3s, visibility 1s ease 0.3s;
     }
 
     .dashboard-reveal-container.visible {
-      opacity: 1;
-      visibility: visible;
+      opacity: 1; visibility: visible;
     }
 
     .demo-dashboard-card {
-      background: rgba(15, 23, 42, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 16px;
-      padding: 3rem;
-      width: 700px;
-      text-align: center;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(99, 102, 241, 0.1);
-      backdrop-filter: blur(15px);
+      background: rgba(10, 15, 30, 0.7);
+      border: 1px solid rgba(0, 229, 255, 0.1);
+      border-radius: 20px; padding: 3rem;
+      width: 650px; text-align: center;
+      box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.6),
+        inset 0 0 20px rgba(0, 229, 255, 0.05),
+        0 0 40px rgba(187, 51, 238, 0.08);
+      backdrop-filter: blur(20px);
       transform: translateY(30px);
       transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
@@ -290,64 +354,63 @@
     }
 
     .demo-title {
-      font-size: 2.2rem;
-      font-weight: 900;
+      font-size: 2.2rem; font-weight: 900;
       letter-spacing: 5px;
-      background: linear-gradient(135deg, #00ffff 0%, #bb33ee 100%);
+      background: linear-gradient(135deg, #00ffff, #bb33ee);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       margin-bottom: 1.5rem;
     }
 
     .demo-text {
-      color: #94a3b8;
-      font-size: 0.95rem;
-      line-height: 1.6;
-      margin-bottom: 2rem;
+      color: #94a3b8; font-size: 0.9rem;
+      line-height: 1.7; margin-bottom: 2rem;
+      font-family: 'Outfit', sans-serif;
     }
 
     .btn-action {
-      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-      border: none;
-      padding: 0.85rem 2rem;
-      border-radius: 30px;
-      color: white;
+      background: linear-gradient(135deg, #00b8d4, #6366f1, #a855f7);
+      border: none; padding: 0.9rem 2.2rem;
+      border-radius: 30px; color: #fff;
       font-family: 'Orbitron', sans-serif;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      cursor: pointer;
-      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+      font-size: 0.8rem; font-weight: 700;
+      letter-spacing: 2px; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
       transition: all 0.3s;
     }
 
     .btn-action:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.6);
     }
   </style>
 </head>
 
 <body>
-  <!-- Canvas background grid/particles -->
-  <canvas id="bgCanvas"></canvas>
+  <!-- Layer 0: Perspective grid -->
+  <canvas id="gridCanvas"></canvas>
+  <!-- Layer 1: Floating particles -->
+  <canvas id="particleCanvas"></canvas>
 
-  <!-- Simulated Target Dashboard (Appears on exit) -->
+  <!-- Dashboard Reveal (post-boot) -->
   <div class="dashboard-reveal-container" id="dashboardReveal">
     <div class="demo-dashboard-card">
       <h1 class="demo-title">LAKSHYA.AI</h1>
       <p class="demo-text">
-        Welcome to the AI-Powered Lead Generation & Outreach Automation platform.<br/>
-        System initialization complete. GPU engines online. 60 FPS viewport rendering active.
+        Welcome to the AI-Powered Lead Generation &amp; Outreach Automation platform.<br/>
+        System initialization complete. All neural engines online.
       </p>
       <button class="btn-action" onclick="restartBootSequence()">REPLAY BOOT SEQUENCE</button>
     </div>
   </div>
 
-  <!-- Primary Booting preloader screen -->
+  <!-- ═══ PRELOADER SCENE ═══ -->
   <div class="preloader-screen" id="preloaderScreen">
-    <div class="perspective-wrapper" id="cameraWrapper">
-      <div class="logo-wrap" id="3dLogoWrap">
+    <div class="scene-3d" id="scene3d">
+
+      <!-- Floating Logo + Text Assembly -->
+      <div class="floating-assembly" id="floatingAssembly">
+        <div class="logo-glow-halo"></div>
 
     <!-- ═══════════════════════════════════════════════════
      MAIN LOGO SVG
@@ -3626,13 +3689,23 @@
       <span class="brand-letter" id="letter-H">H</span>
       <span class="brand-letter" id="letter-Y">Y</span>
       <span class="brand-letter" id="letter-A2">A</span>
+    </div>
+    <div style="margin-top:-5px;">
       <span class="brand-ai" id="brand-ai-suffix">.AI</span>
     </div>
 
-  </div><!-- end logo-wrap -->
-  </div><!-- end cameraWrapper -->
+  </div><!-- end floating-assembly -->
 
-  <!-- Boot status logs and progress bar -->
+  <!-- 3D Floating Platform beneath logo -->
+  <div class="platform-container">
+    <div class="platform-ring r1"></div>
+    <div class="platform-ring r2"></div>
+    <div class="platform-ring r3"></div>
+    <div class="platform-glow-line"></div>
+    <div class="platform-reflection"></div>
+  </div>
+
+  <!-- Boot status & progress bar -->
   <div class="boot-status-panel">
     <div class="boot-message-log" id="bootMessage">Initializing AI Core...</div>
     <div class="progress-box">
@@ -3644,14 +3717,130 @@
     <div class="sub-brand-line">AI POWERED &nbsp;|&nbsp; AUTOMATE &nbsp;|&nbsp; ACHIEVE</div>
   </div>
 
+    </div><!-- end scene-3d -->
   </div><!-- end preloaderScreen -->
 
   <!-- ═══════════════════════════════════════════════
-     Background Canvas: Circuit board + starfield
-═══════════════════════════════════════════════ -->
+     SCRIPT 1: Perspective Grid Canvas
+  ═══════════════════════════════════════════════ -->
   <script>
-    (function () {
-      const canvas = document.getElementById('bgCanvas');
+    (function() {
+      const canvas = document.getElementById('gridCanvas');
+      const ctx = canvas.getContext('2d');
+      let W, H;
+
+      function resize() {
+        W = canvas.width = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+        drawGrid();
+      }
+
+      function drawGrid() {
+        // Deep dark background with radial center glow
+        const bg = ctx.createRadialGradient(W/2, H*0.45, 10, W/2, H*0.45, Math.max(W,H)*0.9);
+        bg.addColorStop(0, '#0d0a1e');
+        bg.addColorStop(0.3, '#080616');
+        bg.addColorStop(0.6, '#04030c');
+        bg.addColorStop(1, '#010108');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, W, H);
+
+        // Vanishing point perspective grid (bottom half)
+        const vpX = W / 2;
+        const vpY = H * 0.42;
+        const horizon = H * 0.55;
+
+        ctx.save();
+
+        // Radial lines from vanishing point
+        const numRays = 40;
+        for (let i = 0; i < numRays; i++) {
+          const angle = (i / numRays) * Math.PI * 2;
+          const endX = vpX + Math.cos(angle) * W * 1.5;
+          const endY = vpY + Math.sin(angle) * H * 2;
+
+          // Only draw bottom-half rays (perspective floor)
+          if (endY > horizon) {
+            const grad = ctx.createLinearGradient(vpX, vpY, endX, endY);
+            grad.addColorStop(0, 'rgba(0, 229, 255, 0.0)');
+            grad.addColorStop(0.3, 'rgba(0, 229, 255, 0.06)');
+            grad.addColorStop(0.6, 'rgba(187, 51, 238, 0.04)');
+            grad.addColorStop(1, 'rgba(0, 229, 255, 0.0)');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 0.6;
+            ctx.beginPath();
+            ctx.moveTo(vpX, horizon);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+          }
+        }
+
+        // Horizontal perspective lines (floor grid)
+        const numHLines = 18;
+        for (let i = 1; i <= numHLines; i++) {
+          const t = i / numHLines;
+          const y = horizon + (H - horizon) * (t * t); // Quadratic spacing for perspective
+          const spread = W * 0.5 + (W * 0.8) * t;
+          const alpha = 0.03 + t * 0.06;
+
+          ctx.strokeStyle = `rgba(0, 229, 255, ${alpha})`;
+          ctx.lineWidth = 0.5;
+          ctx.beginPath();
+          ctx.moveTo(vpX - spread, y);
+          ctx.lineTo(vpX + spread, y);
+          ctx.stroke();
+        }
+
+        // Top-half: scattered circuit traces
+        ctx.shadowBlur = 0;
+        const STEP = 45;
+        // Seeded random for consistent circuit pattern
+        let seed = 42;
+        function seededRandom() {
+          seed = (seed * 16807) % 2147483647;
+          return (seed - 1) / 2147483646;
+        }
+        for (let x = 0; x < W; x += STEP) {
+          for (let y = 0; y < H * 0.65; y += STEP) {
+            if (seededRandom() > 0.6) {
+              const isCyan = seededRandom() > 0.3;
+              const baseColor = isCyan ? '0, 229, 255' : '187, 51, 238';
+              const alpha = 0.04 + seededRandom() * 0.06;
+              ctx.strokeStyle = `rgba(${baseColor}, ${alpha})`;
+              ctx.lineWidth = 0.5 + seededRandom() * 0.5;
+              ctx.beginPath();
+              const r = Math.floor(seededRandom() * 4);
+              if (r === 0) { ctx.moveTo(x, y); ctx.lineTo(x + STEP, y); }
+              else if (r === 1) { ctx.moveTo(x, y); ctx.lineTo(x, y + STEP); }
+              else if (r === 2) { ctx.moveTo(x, y); ctx.lineTo(x + STEP/2, y + STEP/2); }
+              else { ctx.moveTo(x + STEP, y); ctx.lineTo(x + STEP, y + STEP); }
+              ctx.stroke();
+
+              // Node dots at junctions
+              if (seededRandom() > 0.65) {
+                ctx.fillStyle = `rgba(${baseColor}, ${alpha * 2.5})`;
+                ctx.beginPath();
+                ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+              }
+            }
+          }
+        }
+
+        ctx.restore();
+      }
+
+      resize();
+      window.addEventListener('resize', resize);
+    })();
+  </script>
+
+  <!-- ═══════════════════════════════════════════════
+     SCRIPT 2: Floating Particle System
+  ═══════════════════════════════════════════════ -->
+  <script>
+    (function() {
+      const canvas = document.getElementById('particleCanvas');
       const ctx = canvas.getContext('2d');
       let W, H;
 
@@ -3660,135 +3849,82 @@
         H = canvas.height = window.innerHeight;
       }
       resize();
-      window.addEventListener('resize', () => { resize(); drawBg(); });
+      window.addEventListener('resize', resize);
 
-      /* ── static circuit board background ── */
-      function drawBg() {
-        // Dark radial gradient base
-        const bg = ctx.createRadialGradient(W / 2, H / 2, 20, W / 2, H / 2, Math.max(W, H) * 0.78);
-        bg.addColorStop(0, 'rgba(18,8,35,1)');
-        bg.addColorStop(0.4, 'rgba(10,12,24,1)');
-        bg.addColorStop(1, 'rgba(4,5,12,1)');
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, W, H);
-
-        // Circuit traces
-        const STEP = 38;
-        ctx.save();
-        for (let x = 0; x < W; x += STEP) {
-          for (let y = 0; y < H; y += STEP) {
-            if (Math.random() > 0.5) {
-              ctx.shadowBlur = 6;
-              ctx.shadowColor = 'rgba(0,200,220,0.3)';
-              ctx.strokeStyle = 'rgba(0,180,220,0.12)';
-              ctx.lineWidth = 0.8;
-              ctx.beginPath();
-              const r = Math.floor(Math.random() * 4);
-              if (r === 0) { ctx.moveTo(x, y); ctx.lineTo(x + STEP, y); }
-              else if (r === 1) { ctx.moveTo(x, y); ctx.lineTo(x, y + STEP); }
-              else if (r === 2) { ctx.moveTo(x + STEP, y); ctx.lineTo(x + STEP, y + STEP); }
-              else { ctx.moveTo(x, y + STEP); ctx.lineTo(x + STEP, y + STEP); }
-              ctx.stroke();
-            }
-            // Corner dot
-            if (Math.random() > 0.78) {
-              ctx.shadowBlur = 8;
-              ctx.shadowColor = 'rgba(0,220,240,0.6)';
-              ctx.fillStyle = 'rgba(0,200,230,0.22)';
-              ctx.beginPath();
-              ctx.arc(x, y, 1.6, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          }
-        }
-        ctx.restore();
+      const NUM = 90;
+      const particles = [];
+      for (let i = 0; i < NUM; i++) {
+        particles.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          r: Math.random() * 2.2 + 0.3,
+          alpha: Math.random(),
+          da: (Math.random() - 0.5) * 0.012,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.18,
+          hue: Math.random() > 0.4 ? 188 : 280,
+          sparkle: Math.random() > 0.65
+        });
       }
 
-      drawBg();
-
-      /* ── floating sparkle particles ── */
-      const NPART = 70;
-      const parts = Array.from({ length: NPART }, () => ({
-        x: Math.random() * window.innerWidth,
-        y: Math.random() * window.innerHeight,
-        r: Math.random() * 1.8 + 0.3,
-        a: Math.random(),
-        va: (Math.random() - 0.5) * 0.015,
-        vx: (Math.random() - 0.5) * 0.22,
-        vy: (Math.random() - 0.5) * 0.22,
-        hue: Math.random() > 0.5 ? 188 : 275,
-        sparkle: Math.random() > 0.7
-      }));
-
-      // Draw static bg ONCE — no per-frame redraw (stops flicker)
-      drawBg();
-
-      // Offscreen canvas to composite particles onto the static bg
-      const offscreen = document.createElement('canvas');
-      const octx = offscreen.getContext('2d');
-
-      function animLoop() {
-        offscreen.width = W;
-        offscreen.height = H;
-        // Draw the static bg into offscreen each frame
-        const bg2 = octx.createRadialGradient(W / 2, H / 2, 20, W / 2, H / 2, Math.max(W, H) * 0.78);
-        bg2.addColorStop(0, 'rgba(18,8,35,1)');
-        bg2.addColorStop(0.4, 'rgba(10,12,24,1)');
-        bg2.addColorStop(1, 'rgba(4,5,12,1)');
-        octx.fillStyle = bg2;
-        octx.fillRect(0, 0, W, H);
-        // Blit static circuit layer from the pre-drawn main canvas
+      function animateParticles() {
         ctx.clearRect(0, 0, W, H);
-        ctx.drawImage(offscreen, 0, 0);
-        drawBg(); // redraw circuits on top
 
-        parts.forEach(p => {
-          p.x += p.vx; p.y += p.vy;
-          p.a += p.va;
-          if (p.a <= 0 || p.a >= 1) p.va *= -1;
-          if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-          if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.alpha += p.da;
+          if (p.alpha <= 0.05 || p.alpha >= 1) p.da *= -1;
+          if (p.x < -5) p.x = W + 5;
+          if (p.x > W + 5) p.x = -5;
+          if (p.y < -5) p.y = H + 5;
+          if (p.y > H + 5) p.y = -5;
 
-          const alpha = Math.max(0, Math.min(1, p.a));
+          const a = Math.max(0, Math.min(1, p.alpha));
+
           ctx.save();
-          ctx.shadowBlur = p.r * 5;
-          ctx.shadowColor = `hsla(${p.hue},100%,75%,${alpha * 0.7})`;
-          ctx.fillStyle = `hsla(${p.hue},100%,80%,${alpha * 0.75})`;
+          ctx.globalAlpha = a * 0.85;
+          ctx.shadowBlur = p.r * 6;
+          ctx.shadowColor = `hsla(${p.hue}, 100%, 70%, ${a * 0.8})`;
+          ctx.fillStyle = `hsla(${p.hue}, 100%, 78%, ${a})`;
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
           ctx.fill();
 
-          // Cross sparkle for larger bright ones
-          if (p.sparkle && alpha > 0.65 && p.r > 1.2) {
-            ctx.strokeStyle = `hsla(${p.hue},100%,90%,${alpha * 0.4})`;
-            ctx.lineWidth = 0.5;
-            ctx.shadowBlur = 6;
+          // Cross sparkle on bright large particles
+          if (p.sparkle && a > 0.6 && p.r > 1.4) {
+            ctx.strokeStyle = `hsla(${p.hue}, 100%, 90%, ${a * 0.35})`;
+            ctx.lineWidth = 0.4;
+            ctx.shadowBlur = 4;
             ctx.beginPath();
-            ctx.moveTo(p.x - p.r * 3, p.y);
-            ctx.lineTo(p.x + p.r * 3, p.y);
-            ctx.moveTo(p.x, p.y - p.r * 3);
-            ctx.lineTo(p.x, p.y + p.r * 3);
+            ctx.moveTo(p.x - p.r * 4, p.y);
+            ctx.lineTo(p.x + p.r * 4, p.y);
+            ctx.moveTo(p.x, p.y - p.r * 4);
+            ctx.lineTo(p.x, p.y + p.r * 4);
             ctx.stroke();
           }
+
           ctx.restore();
         });
 
-        requestAnimationFrame(animLoop);
+        requestAnimationFrame(animateParticles);
       }
-      animLoop();
+      animateParticles();
     })();
   </script>
 
-  <!-- GPU Preloader Interactivity & Boot Sequence Script -->
+  <!-- ═══════════════════════════════════════════════
+     SCRIPT 3: Boot Sequence + Ring Rotation + Eye Blink
+  ═══════════════════════════════════════════════ -->
   <script>
-    (function () {
+    (function() {
       const svg = document.getElementById('logoSvg');
       const cyanRings = document.getElementById('cyanRings');
       const purpleRings = document.getElementById('purpleRings');
       const eyeWholeGroup = document.getElementById('eyeWholeGroup');
-      const cameraWrapper = document.getElementById('cameraWrapper');
-      const logoWrap = document.getElementById('3dLogoWrap');
-      
+      const scene3d = document.getElementById('scene3d');
+      const floatingAssembly = document.getElementById('floatingAssembly');
+
       const bootMessage = document.getElementById('bootMessage');
       const progressBarFill = document.getElementById('progressBarFill');
       const progressNumber = document.getElementById('progressNumber');
@@ -3808,167 +3944,149 @@
 
       const bootSteps = [
         { progress: 0,   text: "Initializing AI Core..." },
-        { progress: 18,  text: "Loading Neural Engine..." },
-        { progress: 38,  text: "Scanning Data Sources..." },
-        { progress: 58,  text: "Connecting AI Agents..." },
-        { progress: 78,  text: "Training Intent Model..." },
-        { progress: 95,  text: "Finalizing Launch Protocols..." },
-        { progress: 100, text: "Launching Lakshya.ai" }
+        { progress: 15,  text: "Loading Neural Engine..." },
+        { progress: 32,  text: "Scanning Data Sources..." },
+        { progress: 50,  text: "Connecting AI Agents..." },
+        { progress: 68,  text: "Training Intent Model..." },
+        { progress: 85,  text: "Finalizing Launch Protocols..." },
+        { progress: 100, text: "█ Launching Lakshya.ai █" }
       ];
 
       let angle = 0;
       let pulseTime = 0;
-      let blinkTime = 0;
+      let blinkClock = 0;
       let isBlinking = false;
-      let blinkProgress = 0;
-      
-      // Progress control
+      let blinkT = 0;
       let currentProgress = 0;
       let targetProgress = 0;
       let bootFinished = false;
 
-      // ── Mouse 3D tilt effect ──
-      preloaderScreen.addEventListener('mousemove', (e) => {
+      // ── Mouse parallax on floating assembly ──
+      document.addEventListener('mousemove', (e) => {
         if (bootFinished) return;
         const w = window.innerWidth;
         const h = window.innerHeight;
-        const x = (e.clientX - w / 2) / (w / 2); // -1 to 1
-        const y = (e.clientY - h / 2) / (h / 2); // -1 to 1
-        logoWrap.style.transform = `rotateY(${x * 15}deg) rotateX(${-y * 15}deg)`;
+        const mx = (e.clientX - w / 2) / (w / 2); // -1 to 1
+        const my = (e.clientY - h / 2) / (h / 2);
+        floatingAssembly.style.transform =
+          `translateY(${-10 + my * 8}px) rotateY(${mx * 12}deg) rotateX(${-my * 8}deg)`;
       });
 
-      preloaderScreen.addEventListener('mouseleave', () => {
-        logoWrap.style.transform = `rotateY(0deg) rotateX(0deg)`;
-      });
-
-      // ── Reset boot sequence simulation ──
+      // ── Restart function ──
       window.restartBootSequence = function() {
         bootFinished = false;
         currentProgress = 0;
         targetProgress = 0;
         progressBarFill.style.width = '0%';
         progressNumber.innerText = '0%';
+        bootMessage.innerText = bootSteps[0].text;
         brandAiSuffix.classList.remove('visible');
         letters.forEach(el => el.classList.remove('visible'));
-        
         preloaderScreen.classList.remove('exit-animation');
+        preloaderScreen.style.display = '';
+        preloaderScreen.style.opacity = '1';
+        preloaderScreen.style.visibility = 'visible';
         dashboardReveal.classList.remove('visible');
-        
-        // Start target progress drive
         driveProgress();
       };
 
       function driveProgress() {
         if (currentProgress >= 100) return;
-        
-        // Random incremental targets to feel organic
-        const increment = Math.floor(Math.random() * 15) + 8;
+        const increment = Math.floor(Math.random() * 12) + 6;
         targetProgress = Math.min(100, targetProgress + increment);
-        
-        // Calculate dynamic delay based on step size
-        setTimeout(driveProgress, Math.random() * 800 + 400);
+        setTimeout(driveProgress, Math.random() * 700 + 350);
       }
 
-      // Initial progress trigger
       driveProgress();
 
-      function updateSystemProgress() {
+      function updateProgress() {
         if (currentProgress < targetProgress) {
-          currentProgress += 0.5; // Smooth incremental animation
+          currentProgress += 0.4;
           if (currentProgress > 100) currentProgress = 100;
-          
+
           progressBarFill.style.width = `${currentProgress}%`;
           progressNumber.innerText = `${Math.floor(currentProgress)}%`;
-          
-          // Update status message logs based on progress threshold
-          let currentStatus = bootSteps[0].text;
-          for (let step of bootSteps) {
-            if (currentProgress >= step.progress) {
-              currentStatus = step.text;
-            }
+
+          // Update boot status text
+          let status = bootSteps[0].text;
+          for (const step of bootSteps) {
+            if (currentProgress >= step.progress) status = step.text;
           }
-          if (bootMessage.innerText !== currentStatus) {
-            bootMessage.innerText = currentStatus;
-            
-            // Camera shake effect on checkpoint trigger
-            cameraWrapper.classList.add('shake-pulse');
-            setTimeout(() => {
-              cameraWrapper.classList.remove('shake-pulse');
-            }, 400);
+          if (bootMessage.innerText !== status) {
+            bootMessage.innerText = status;
+            scene3d.classList.add('shake-pulse');
+            setTimeout(() => scene3d.classList.remove('shake-pulse'), 350);
           }
 
-          // Light up letters sequentially (7 letters, ~12% spacing)
-          const letterIndex = Math.floor(currentProgress / 13);
+          // Light up LAKSHYA letters
+          const idx = Math.floor(currentProgress / 13);
           for (let i = 0; i < letters.length; i++) {
-            if (i <= letterIndex && currentProgress > 5) {
+            if (i <= idx && currentProgress > 4) {
               letters[i].classList.add('visible');
             }
           }
 
-          // Reveal .AI cyan text on completion
-          if (currentProgress >= 98) {
+          // Reveal .AI
+          if (currentProgress >= 95) {
             brandAiSuffix.classList.add('visible');
           }
 
-          // Boot cycle completed triggers exit animation
-          if (currentProgress === 100 && !bootFinished) {
+          // Boot complete → exit
+          if (currentProgress >= 100 && !bootFinished) {
             bootFinished = true;
             setTimeout(() => {
-              // Add a white flash zoom out exit transition
               preloaderScreen.classList.add('exit-animation');
               dashboardReveal.classList.add('visible');
-            }, 800);
+            }, 900);
           }
         }
       }
 
-      function animationLoop() {
-        angle += 0.4;         // counter rotation angle
-        pulseTime += 0.035;   // arrow pulse timeline
-        blinkTime += 1;       // blink clock
+      function mainLoop() {
+        angle += 0.35;
+        pulseTime += 0.03;
+        blinkClock++;
 
-        // 1. Counter-rotate SVG rings
-        if (cyanRings) {
-          cyanRings.setAttribute('transform', `rotate(${angle * 0.5})`);
-        }
-        if (purpleRings) {
-          purpleRings.setAttribute('transform', `rotate(${-angle * 0.8})`);
-        }
+        // 1. Counter-rotate rings
+        if (cyanRings) cyanRings.setAttribute('transform', `rotate(${angle * 0.4})`);
+        if (purpleRings) purpleRings.setAttribute('transform', `rotate(${-angle * 0.7})`);
 
-        // 2. Pulse arrow keys opacity
-        const arrowGroups = svg.querySelectorAll('[filter="url(#fArrow)"]');
-        arrowGroups.forEach(g => {
-          g.style.opacity = (0.7 + Math.sin(pulseTime) * 0.3).toFixed(3);
+        // 2. Pulse arrows
+        const arrows = svg.querySelectorAll('[filter="url(#fArrow)"]');
+        arrows.forEach(g => {
+          g.style.opacity = (0.65 + Math.sin(pulseTime) * 0.35).toFixed(3);
         });
 
-        // 3. Eye mechanical blinking logic
-        if (!isBlinking && blinkTime % 220 === 0) {
+        // 3. Eye blink every ~4 seconds
+        if (!isBlinking && blinkClock % 250 === 0 && blinkClock > 60) {
           isBlinking = true;
-          blinkProgress = 0;
+          blinkT = 0;
         }
-
         if (isBlinking) {
-          blinkProgress += 0.15;
-          const eyelidY = Math.abs(Math.sin(blinkProgress * Math.PI));
+          blinkT += 0.12;
+          const scaleY = 1 - Math.abs(Math.sin(blinkT * Math.PI)) * 0.96;
           if (eyeWholeGroup) {
-            // scale eyeWholeGroup Y dimension
-            eyeWholeGroup.setAttribute('transform', `scale(1, ${1 - eyelidY * 0.95})`);
+            eyeWholeGroup.setAttribute('transform', `scale(1, ${scaleY})`);
           }
-          if (blinkProgress >= 1) {
+          if (blinkT >= 1) {
             isBlinking = false;
-            if (eyeWholeGroup) {
-              eyeWholeGroup.removeAttribute('transform');
-            }
+            if (eyeWholeGroup) eyeWholeGroup.removeAttribute('transform');
           }
         }
 
-        // 4. Update organic progress meter
-        updateSystemProgress();
+        // 4. Iris glow pulse
+        const irisCircles = svg.querySelectorAll('[filter="url(#fIris)"]');
+        irisCircles.forEach(g => {
+          g.style.opacity = (0.8 + Math.sin(pulseTime * 1.5) * 0.2).toFixed(3);
+        });
 
-        requestAnimationFrame(animationLoop);
+        // 5. Update progress
+        updateProgress();
+
+        requestAnimationFrame(mainLoop);
       }
 
-      animationLoop();
+      mainLoop();
     })();
   </script>
 </body>
