@@ -1,0 +1,69 @@
+================================================================================
+LAKSHYA.AI - TASK HISTORY AND REFERENCE LOG (Last Updated: 2026-07-02 01:40:00)
+================================================================================
+
+This file is a persistent log of all completed and current tasks. Antigravity must 
+refer to this file to obtain project state and history, preventing redundant scans
+of the codebase files.
+
+--------------------------------------------------------------------------------
+COMPLETED TASKS
+--------------------------------------------------------------------------------
+
+[2026-07-02 01:20:00] Initial Environment & Project Analysis
+  - Inspected Laravel application folder structure at C:\xampp\htdocs\projects\marketing
+  - Identified authentication controllers and views (login.blade.php, register.blade.php)
+  - Located database configurations, factories, and playwright test script (test_all_features.js)
+
+[2026-07-02 01:25:00] Prevented Password Autofill & Remember Me Privacy Leak
+  - Removed "Remember Me" session tracking checkbox from login form.
+  - Removed "Demo Accounts (Click to Prefill)" UI panels and functions to avoid credentials leak.
+  - Disabled form & input autocompletion by adding `autocomplete="off"` to login/register forms, email, and name inputs.
+  - Set password inputs to `autocomplete="new-password"` to block browser auto-saving prompts.
+  - Verified changes in resources/views/auth/login.blade.php and resources/views/auth/register.blade.php.
+
+[2026-07-02 01:26:00] Setup Tracking Artifacts
+  - Created task.txt log in workspace root (this file).
+  - Setup walkthrough.md and task.md to maintain processes and plans for subsequent turns.
+
+[2026-07-02 01:26:53] Confirmed Continuous Task Logging Instruction
+  - Agreed to update the task history log in each turn/prompt to ensure history is always fresh.
+
+[2026-07-02 01:38:00] Resolved Database Connection and Setup Local MySQL & VM Agent
+  - Re-routed DB configurations in .env from offline ngrok MySQL server to local XAMPP MySQL.
+  - Started XAMPP MySQL standalone server on port 3306 and created the "lakshya" database.
+  - Executed fresh database migrations and seed data injection via artisan.
+  - Started the VM Agent Flask server (api.py) on port 5000 to dynamically enable the dashboard scraping crawler features.
+
+[2026-07-02 01:40:00] Executed End-to-End Playwright UI/Integration Tests
+  - Configured test_all_features.js to run headlessly and output screenshots to the new session brain workspace.
+  - Ran the node Playwright test suite successfully, completing all 11 stages of the application test flow (Admin Actions, Project/Keyword CRM Kanban, AI Marketer generates, Client Impersonation, AI Agents dispatch/WhatsApp logs, and Billing settings).
+  - Saved detailed logs of the successful execution to tests_output.txt.
+
+[2026-07-02 22:19:00] Configured Test Mode for VM Agent & Started Backend Services
+  - Added VM_AGENT_LIVE=false environment variable to .env.
+  - Updated config/admin.php to select VM Agent URL dynamically depending on VM_AGENT_LIVE flag.
+  - Refactored DashboardController.php, CampaignController.php, and ClientController.php to use config('admin.vm.base_url') instead of hardcoded localhost URLs.
+  - Started Laravel server (via XAMPP PHP path) on port 8000 in the background.
+  - Started Python VM Agent Flask API server on port 5000 in the background.
+  - Verified local environment with comprehensive test runs (all 15 tests passed).
+
+[2026-07-03 19:50:00] Created Cross-Platform Unified Project Runner Scripts
+  - Created run_project.py as a centralized cross-platform python orchestrator for starting Laravel web server, queue listener, Vite dev server, and all Python VM Agent background workers.
+  - Built process group/tree termination logic into the runner to guarantee no orphaned backend processes when terminating with Ctrl+C.
+  - Created run_project.bat and run_project.sh wrappers for simple, single-click startup on Windows and Android Termux.
+  - Verified successful concurrent startup and internal logging communication.
+
+[2026-07-03 21:22:00] Reorganized File System and Directory Structure
+  - Moved unique creative JPG assets from redundant `marketing/` folder to `public/storage/ad_creatives/` and deleted the folder.
+  - Removed duplicate root-level `test/` HTML showcase folder (keeping active copies in `public/test/`).
+  - Relocated Playwright integration script `test_all_features.js` and logs `tests_output.txt` to the dedicated `tests/e2e/` folder.
+  - Cleaned VM Agent directory by deleting duplicate trigger files and moving the demo script to `vm_agent/tests/`.
+  - Deleted the outdated `vm_agent.zip` archive.
+  - Verified clean status and ran orchestrator to ensure successful operation.
+
+--------------------------------------------------------------------------------
+CURRENT / PLAN TASKS
+--------------------------------------------------------------------------------
+
+- File system fully organized. Awaiting subsequent user instructions.

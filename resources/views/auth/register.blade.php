@@ -104,26 +104,26 @@
             </div>
         @endif
 
-        <form action="{{ route('register') }}" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <form autocomplete="off" action="{{ route('register') }}" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
             @csrf
             <div class="form-group">
                 <label for="name">Full Name</label>
-                <input type="text" name="name" id="name" class="form-control" placeholder="John Doe" required value="{{ old('name') }}">
+                <input type="text" name="name" id="name" class="form-control" placeholder="John Doe" required value="{{ old('name') }}" autocomplete="off">
             </div>
 
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input type="email" name="email" id="email" class="form-control" placeholder="john@company.com" required value="{{ old('email') }}">
+                <input type="email" name="email" id="email" class="form-control" placeholder="john@company.com" required value="{{ old('email') }}" autocomplete="off">
             </div>
             
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" name="password" id="password" class="form-control" placeholder="Min. 6 characters" required>
+                <input type="password" name="password" id="password" class="form-control" placeholder="Min. 6 characters" required autocomplete="new-password">
             </div>
 
             <div class="form-group">
                 <label for="password_confirmation">Confirm Password</label>
-                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="••••••••" required>
+                <input type="password" name="password_confirmation" id="password_confirmation" class="form-control" placeholder="••••••••" required autocomplete="new-password">
             </div>
 
             <button type="submit" class="btn btn-primary btn-submit">Sign Up</button>

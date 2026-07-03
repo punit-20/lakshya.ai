@@ -117,7 +117,7 @@ def process_agent_task(task, conn):
             
             # Save into email_logs
             cursor.execute(
-                "INSERT INTO email_logs (to, subject, body_html, sent_at, status, created_at, updated_at) VALUES (%s, %s, %s, %s, 'Sent', %s, %s)",
+                "INSERT INTO email_logs (`to`, subject, body_html, sent_at, status, created_at, updated_at) VALUES (%s, %s, %s, %s, 'Sent', %s, %s)",
                 (recipient, subject, body, now, now, now)
             )
             log_step(cursor, run_id, "INFO", "SMTP transmission: 250 OK. Outbound transaction saved to database email_logs.")

@@ -25,7 +25,7 @@ return [
     |
     */
     'vm' => [
-        'base_url' => env('VM_AGENT_URL', 'http://127.0.0.1:5000'),
+        'base_url' => env('VM_AGENT_LIVE', false) ? env('VM_AGENT_URL') : 'http://127.0.0.1:5000',
         'timeout' => (int) env('VM_AGENT_TIMEOUT', 60),
         'status_timeout' => (int) env('VM_AGENT_STATUS_TIMEOUT', 1),
     ],

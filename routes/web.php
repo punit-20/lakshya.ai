@@ -57,6 +57,7 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
 
     // AI Marketer / Creative Generator
     Route::get('/marketing', [MarketingController::class, 'marketing'])->name('admin.marketing');
+    Route::post('/marketing/generate', [MarketingController::class, 'generateMarketingPost'])->name('admin.marketing.generate');
     Route::post('/marketing/generate-social', [MarketingController::class, 'generateSocialSuite'])->name('admin.marketing.generate-social');
     Route::post('/marketing/generate-growth', [MarketingController::class, 'generateGrowthSuite'])->name('admin.marketing.generate-growth');
     Route::post('/marketing/generate-campaign', [MarketingController::class, 'generateAdCampaign'])->name('admin.marketing.generate-campaign');
@@ -87,9 +88,10 @@ Route::prefix('client')->middleware('auth')->group(function () {
     
     // Client Creative Builder (using dynamic MarketingController)
     Route::get('/marketing', [MarketingController::class, 'marketing'])->name('client.marketing');
+    Route::post('/marketing/generate', [ClientController::class, 'generateCampaign'])->name('client.marketing.generate');
     Route::post('/marketing/generate-social', [MarketingController::class, 'generateSocialSuite'])->name('client.marketing.generate-social');
     Route::post('/marketing/generate-growth', [MarketingController::class, 'generateGrowthSuite'])->name('client.marketing.generate-growth');
     Route::post('/marketing/generate-campaign', [MarketingController::class, 'generateAdCampaign'])->name('client.marketing.generate-campaign');
-    Route::post('/marketing/launch', [MarketingController::class, 'launchMarketingCampaign'])->name('client.marketing.launch');
+    Route::post('/marketing/launch', [ClientController::class, 'launchCampaign'])->name('client.marketing.launch');
 });
 

@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Project;
 use App\Models\AuditLog;
 use App\Models\Notification;
+use App\Services\GeminiService;
+use App\Services\ContentGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Carbon\Carbon;
@@ -199,7 +201,7 @@ Output must be in JSON format matching the schema.";
 
         // Submit the image generation task to the Python worker queue API
         try {
-            Http::timeout(3)->post('http://127.0.0.1:5000/queue-task', [
+            Http::timeout(3)->post(config('admin.vm.base_url') . '/queue-task', [
                 'client_id' => $client->id,
                 'task_type' => 'generate_image',
                 'payload' => [
@@ -274,5 +276,21 @@ Output must be in JSON format matching the schema.";
             'spend' => 0,
             'plan' => 'Free Trial'
         ];
+    }
+
+    /**
+     * Call Gemini API with key rotation, or use mock data as fallback.
+     */
+    protected function callGeminiWithRotation(string $prompt, array $schema): array
+    {
+        $gemini = app(GeminiService::class);
+        
+        if ($gemini->hasKeys()) {
+            return $gemini->generateContent($prompt, $schema);
+        }
+        
+        // Fallback to mock data when no API keys configured
+        $mockGenerator = app(ContentGenerationService::class);
+        return $mockGenerator->generateMockDataForSchema($schema, $prompt);
     }
 }

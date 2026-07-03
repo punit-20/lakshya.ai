@@ -11,6 +11,8 @@ use App\Http\Requests\GenerateGrowthSuiteRequest;
 use App\Http\Requests\GenerateAdCampaignRequest;
 use App\Http\Requests\GenerateMarketingPostRequest;
 use App\Http\Requests\LaunchMarketingCampaignRequest;
+use App\Services\GeminiService;
+use App\Services\ContentGenerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
@@ -382,5 +384,21 @@ Output must be in JSON format matching the schema.";
             'success' => true,
             'message' => 'Campaign successfully launched!'
         ]);
+    }
+
+    /**
+     * Call Gemini API with key rotation, or use mock data as fallback.
+     */
+    protected function callGeminiWithRotation(string $prompt, array $schema): array
+    {
+        $gemini = app(GeminiService::class);
+        
+        if ($gemini->hasKeys()) {
+            return $gemini->generateContent($prompt, $schema);
+        }
+        
+        // Fallback to mock data when no API keys configured
+        $mockGenerator = app(ContentGenerationService::class);
+        return $mockGenerator->generateMockDataForSchema($schema, $prompt);
     }
 }

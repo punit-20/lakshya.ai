@@ -127,28 +127,22 @@
             </div>
         @endif
 
-        <form action="{{ route('login') }}" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+        <form autocomplete="off" action="{{ route('login') }}" method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
             @csrf
             <div class="form-group">
                 <label for="email">Email Address</label>
-                <input type="email" name="email" id="email" class="form-control" placeholder="name@company.com" required value="{{ old('email') }}">
+                <input type="email" name="email" id="email" class="form-control" placeholder="name@company.com" required value="{{ old('email') }}" autocomplete="off">
             </div>
             
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required>
-            </div>
-
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem;">
-                <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-muted); cursor: pointer;">
-                    <input type="checkbox" name="remember" style="accent-color: var(--primary-color);"> Remember me
-                </label>
+                <input type="password" name="password" id="password" class="form-control" placeholder="••••••••" required autocomplete="new-password">
             </div>
 
             <button type="submit" class="btn btn-primary btn-submit">Sign In</button>
         </form>
 
-        <div class="demo-credentials">
+        <div class="demo-credentials" style="margin-top: 1rem;">
             <div style="font-weight: 700; margin-bottom: 0.25rem;">💡 Demo Accounts (Click to Prefill):</div>
             <div class="demo-credential-row" onclick="prefill('admin@lakshya.ai', 'admin123')">
                 <span>🔑 Admin: admin@lakshya.ai</span>

@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lakshya.AI — Autonomous AI Lead Intelligence Platform</title>
+    <meta name="description" content="Lakshya.AI is a cyberpunk-grade autonomous AI platform that scrapes, qualifies, and converts leads from Reddit, Twitter & LinkedIn using Gemini-powered agents.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* =============================================
+           CYBERPUNK DESIGN SYSTEM — LAKSHYA.AI
+           ============================================= */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --cp-bg: #030712;
+            --cp-surface: rgba(15, 23, 42, 0.6);
+            --cp-surface-bright: rgba(22, 30, 49, 0.75);
+            --cp-border: rgba(99, 102, 241, 0.15);
+            --cp-border-bright: rgba(99, 102, 241, 0.4);
+            --cp-neon-purple: #a855f7;
+            --cp-neon-blue: #6366f1;
+            --cp-neon-cyan: #06b6d4;
+            --cp-neon-green: #34d399;
+            --cp-neon-pink: #f472b6;
+            --cp-neon-red: #fb7185;
+            --cp-text: #e2e8f0;
+            --cp-text-muted: #64748b;
+            --cp-gradient: linear-gradient(135deg, #a855f7 0%, #6366f1 50%, #06b6d4 100%);
+            --cp-gradient-warm: linear-gradient(135deg, #f472b6 0%, #a855f7 100%);
+            --cp-glow-purple: 0 0 30px rgba(168, 85, 247, 0.3), 0 0 60px rgba(168, 85, 247, 0.1);
+            --cp-glow-blue: 0 0 30px rgba(99, 102, 241, 0.3), 0 0 60px rgba(99, 102, 241, 0.1);
+            --cp-glow-cyan: 0 0 30px rgba(6, 182, 212, 0.3);
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--cp-bg);
+            color: var(--cp-text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--cp-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--cp-neon-blue); border-radius: 3px; }
+
+        /* =============================================
+           GLOBAL SCANLINE OVERLAY
+           ============================================= */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(99, 102, 241, 0.02) 2px,
+                rgba(99, 102, 241, 0.02) 4px
+            );
+            pointer-events: none;
+            z-index: 10000;
+        }
+
+        /* =============================================
+           ANIMATED GRID BACKGROUND
+           ============================================= */
+        .grid-bg {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background-image:
+                linear-gradient(rgba(99, 102, 241, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99, 102, 241, 0.06) 1px, transparent 1px);
+            background-size: 60px 60px;
+            animation: gridScroll 25s linear infinite;
+        }
+
+        .grid-bg::after {
+            content: '';
+            position: absolute;
+            width: 100%; height: 100%;
+            background:
+                radial-gradient(ellipse at 15% 20%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+                radial-gradient(ellipse at 85% 60%, rgba(6, 182, 212, 0.1) 0%, transparent 45%),
+                radial-gradient(ellipse at 50% 90%, rgba(99, 102, 241, 0.08) 0%, transparent 40%);
+        }
+
+        @keyframes gridScroll {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(60px, 60px); }
+        }
+
+        /* =============================================
+           FLOATING PARTICLES
+           ============================================= */
+        .particles {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            animation: particleFloat linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes particleFloat {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+
+        /* =============================================
+           NAVBAR
+           ============================================= */
+        .navbar {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 9999;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(3, 7, 18, 0.75);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--cp-border);
+            transition: all 0.3s;
+        }
+
+        .navbar.scrolled {
+            padding: 0.75rem 2rem;
+            background: rgba(3, 7, 18, 0.92);
+            border-bottom-color: var(--cp-border-bright);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 42px; height: 42px;
+            background: var(--cp-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: var(--cp-glow-purple);
+            animation: logoPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes logoPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(168, 85, 247, 0.5), 0 0 80px rgba(99, 102, 241, 0.2); }
+        }
+
+        .nav-logo-text {
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: var(--cp-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--cp-text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0;
+            width: 0; height: 2px;
+            background: var(--cp-gradient);
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover { color: white; }
+        .nav-links a:hover::after { width: 100%; }
+
+        .nav-cta {
+            padding: 0.6rem 1.5rem;
+            background: var(--cp-gradient);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.5);
+        }
+
+        /* =============================================
+           HERO SECTION
+           ============================================= */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8rem 2rem 4rem;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid var(--cp-border);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--cp-neon-cyan);
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.8s ease-out;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .hero-badge .pulse-dot {
+            width: 8px; height: 8px;
+            background: var(--cp-neon-green);
+            border-radius: 50%;
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4); }
+            50% { opacity: 0.7; box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 900;
+            line-height: 1.05;
+            letter-spacing: -2px;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 1s ease-out 0.2s both;
+        }
+
+        .hero h1 .gradient-text {
+            background: var(--cp-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        .hero h1 .gradient-text::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 0;
+            width: 100%; height: 4px;
+            background: var(--cp-gradient);
+            border-radius: 2px;
+            animation: glowLine 3s ease-in-out infinite;
+        }
+
+        @keyframes glowLine {
+            0%, 100% { opacity: 0.5; box-shadow: 0 0 10px rgba(99, 102, 241, 0.3); }
+            50% { opacity: 1; box-shadow: 0 0 25px rgba(99, 102, 241, 0.6); }
+        }
+
+        .hero .subtitle {
+            font-size: 1.2rem;
+            color: var(--cp-text-muted);
+            max-width: 680px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+            animation: fadeInUp 1s ease-out 0.4s both;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            animation: fadeInUp 1s ease-out 0.6s both;
+        }
+
+        .btn-primary-lg {
+            padding: 1rem 2.5rem;
+            background: var(--cp-gradient);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 4px 30px rgba(99, 102, 241, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary-lg::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary-lg:hover::before { left: 100%; }
+        .btn-primary-lg:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 40px rgba(99, 102, 241, 0.5);
+        }
+
+        .btn-outline-lg {
+            padding: 1rem 2.5rem;
+            background: transparent;
+            border: 1px solid var(--cp-border-bright);
+            border-radius: 14px;
+            color: var(--cp-text);
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-outline-lg:hover {
+            border-color: var(--cp-neon-cyan);
+            color: var(--cp-neon-cyan);
+            box-shadow: var(--cp-glow-cyan);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Stats Bar */
+        .hero-stats {
+            display: flex;
+            gap: 3rem;
+            margin-top: 4rem;
+            animation: fadeInUp 1s ease-out 0.8s both;
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--cp-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--cp-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.25rem;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* =============================================
+           SECTION STYLES
+           ============================================= */
+        .section {
+            padding: 6rem 2rem;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-tag {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid var(--cp-border);
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--cp-neon-purple);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            font-size: 1.05rem;
+            color: var(--cp-text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* =============================================
+           FEATURE CARDS
+           ============================================= */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .feature-card {
+            background: var(--cp-surface);
+            border: 1px solid var(--cp-border);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: var(--cp-gradient);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s;
+        }
+
+        .feature-card:hover {
+            border-color: var(--cp-border-bright);
+            transform: translateY(-6px);
+            box-shadow: var(--cp-glow-blue);
+        }
+
+        .feature-card:hover::before { transform: scaleX(1); }
+
+        .feature-icon {
+            width: 56px; height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .feature-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: white;
+        }
+
+        .feature-card p {
+            font-size: 0.88rem;
+            color: var(--cp-text-muted);
+            line-height: 1.6;
+        }
+
+        .feature-tag {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 1rem;
+        }
+
+        /* =============================================
+           DASHBOARD PREVIEW
+           ============================================= */
+        .dashboard-preview {
+            margin: 4rem auto;
+            max-width: 1100px;
+            position: relative;
+        }
+
+        .preview-frame {
+            background: var(--cp-surface-bright);
+            border: 1px solid var(--cp-border-bright);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--cp-glow-purple), 0 30px 80px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .preview-frame::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: var(--cp-gradient);
+        }
+
+        .preview-topbar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--cp-border);
+        }
+
+        .preview-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+        }
+
+        .preview-stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-stat-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--cp-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .preview-stat-card .psc-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.75rem;
+            font-weight: 800;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .preview-stat-card .psc-label {
+            font-size: 0.75rem;
+            color: var(--cp-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .preview-charts-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 1rem;
+        }
+
+        .preview-chart-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--cp-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .preview-chart-card h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--cp-text-muted);
+        }
+
+        /* Animated fake chart */
+        .chart-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 100px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            border-radius: 4px 4px 0 0;
+            animation: barGrow 1.5s ease-out both;
+            position: relative;
+        }
+
+        @keyframes barGrow {
+            from { height: 0; }
+        }
+
+        /* Platform bars */
+        .platform-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .platform-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .platform-item span {
+            font-size: 0.8rem;
+            min-width: 70px;
+        }
+
+        .platform-bar-track {
+            flex: 1;
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .platform-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            animation: barFill 2s ease-out both;
+        }
+
+        @keyframes barFill {
+            from { width: 0; }
+        }
+
+        /* =============================================
+           AGENTS SECTION
+           ============================================= */
+        .agents-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .agent-card {
+            background: var(--cp-surface);
+            border: 1px solid var(--cp-border);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 1px;
+            background: var(--cp-gradient);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .agent-card:hover::after { opacity: 1; }
+        .agent-card:hover { transform: translateY(-6px); }
+
+        .agent-avatar {
+            width: 64px; height: 64px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+
+        .agent-avatar .status-ring {
+            position: absolute;
+            inset: -4px;
+            border-radius: 24px;
+            border: 2px solid;
+            animation: statusPulse 2s infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        .agent-card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .agent-card p {
+            font-size: 0.82rem;
+            color: var(--cp-text-muted);
+            line-height: 1.5;
+        }
+
+        /* =============================================
+           TERMINAL / CODE BLOCK
+           ============================================= */
+        .terminal-section {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .terminal {
+            background: rgba(3, 7, 18, 0.9);
+            border: 1px solid var(--cp-border-bright);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--cp-glow-blue), 0 20px 60px rgba(0,0,0,0.4);
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            background: rgba(15, 23, 42, 0.8);
+            border-bottom: 1px solid var(--cp-border);
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.8;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+
+        .terminal-line {
+            opacity: 0;
+            animation: typeLine 0.3s ease-out forwards;
+        }
+
+        @keyframes typeLine {
+            to { opacity: 1; }
+        }
+
+        .t-green { color: var(--cp-neon-green); }
+        .t-purple { color: var(--cp-neon-purple); }
+        .t-cyan { color: var(--cp-neon-cyan); }
+        .t-yellow { color: #fbbf24; }
+        .t-pink { color: var(--cp-neon-pink); }
+        .t-red { color: var(--cp-neon-red); }
+        .t-muted { color: var(--cp-text-muted); }
+        .t-white { color: white; font-weight: 600; }
+
+        /* =============================================
+           PRICING / TIERS
+           ============================================= */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .pricing-card {
+            background: var(--cp-surface);
+            border: 1px solid var(--cp-border);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.4s;
+            position: relative;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--cp-neon-purple);
+            box-shadow: var(--cp-glow-purple);
+            transform: scale(1.04);
+        }
+
+        .pricing-card:hover {
+            border-color: var(--cp-border-bright);
+            transform: translateY(-4px);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.04) translateY(-4px);
+        }
+
+        .pricing-tier {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 0.75rem;
+        }
+
+        .pricing-price {
+            font-size: 2.5rem;
+            font-weight: 900;
+            margin-bottom: 0.25rem;
+        }
+
+        .pricing-price .currency {
+            font-size: 1.25rem;
+            font-weight: 600;
+            vertical-align: top;
+        }
+
+        .pricing-period {
+            font-size: 0.8rem;
+            color: var(--cp-text-muted);
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            font-size: 0.85rem;
+            color: var(--cp-text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pricing-features li .check {
+            color: var(--cp-neon-green);
+            font-weight: 700;
+        }
+
+        .btn-pricing {
+            width: 100%;
+            padding: 0.85rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+        }
+
+        .btn-pricing.primary {
+            background: var(--cp-gradient);
+            color: white;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-pricing.outline {
+            background: transparent;
+            border: 1px solid var(--cp-border-bright);
+            color: var(--cp-text);
+        }
+
+        .btn-pricing:hover {
+            transform: translateY(-2px);
+        }
+
+        /* =============================================
+           CTA SECTION
+           ============================================= */
+        .cta-section {
+            text-align: center;
+            padding: 6rem 2rem;
+            position: relative;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cp-neon-blue), transparent);
+        }
+
+        /* =============================================
+           FOOTER
+           ============================================= */
+        .footer {
+            padding: 3rem 2rem;
+            text-align: center;
+            border-top: 1px solid var(--cp-border);
+        }
+
+        .footer p {
+            font-size: 0.8rem;
+            color: var(--cp-text-muted);
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .footer-links a {
+            color: var(--cp-text-muted);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover { color: var(--cp-neon-cyan); }
+
+        /* =============================================
+           SCROLL REVEAL ANIMATION
+           ============================================= */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* =============================================
+           GLITCH TEXT EFFECT
+           ============================================= */
+        .glitch {
+            position: relative;
+            animation: glitchSkew 4s infinite linear alternate;
+        }
+
+        @keyframes glitchSkew {
+            0%, 100% { transform: skew(0deg); }
+            20% { transform: skew(-0.5deg); }
+            40% { transform: skew(0.5deg); }
+            60% { transform: skew(-0.3deg); }
+            80% { transform: skew(0.3deg); }
+        }
+
+        /* Neon horizontal rule */
+        .neon-hr {
+            border: none;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--cp-neon-purple), var(--cp-neon-cyan), transparent);
+            margin: 0 auto;
+            max-width: 600px;
+        }
+
+        /* Feature span with typed font */
+        .mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* =============================================
+           RESPONSIVE
+           ============================================= */
+        @media (max-width: 1024px) {
+            .features-grid, .agents-grid, .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+            .preview-stats-row { grid-template-columns: repeat(2, 1fr); }
+            .hero-stats { gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+        }
+
+        @media (max-width: 768px) {
+            .features-grid, .agents-grid, .pricing-grid { grid-template-columns: 1fr; }
+            .preview-stats-row { grid-template-columns: 1fr; }
+            .preview-charts-row { grid-template-columns: 1fr; }
+            .nav-links { display: none; }
+            .hero-cta-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Animated Grid Background -->
+<div class="grid-bg"></div>
+
+<!-- Floating Particles (generated by JS) -->
+<div class="particles" id="particles"></div>
+
+<!-- ======================================
+     NAVBAR
+     ====================================== -->
+<nav class="navbar" id="navbar">
+    <a href="#" class="nav-brand">
+        <div class="nav-logo">L</div>
+        <span class="nav-logo-text">LAKSHYA.AI</span>
+    </a>
+    <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#dashboard">Dashboard</a></li>
+        <li><a href="#agents">AI Agents</a></li>
+        <li><a href="#terminal">Live Feed</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+    </ul>
+    <a href="/login" class="nav-cta">Launch Console →</a>
+</nav>
+
+<!-- ======================================
+     HERO SECTION
+     ====================================== -->
+<section class="hero" id="hero">
+    <div class="hero-badge">
+        <span class="pulse-dot"></span>
+        AI Agents Online — Systems Operational
+    </div>
+
+    <h1 class="glitch">
+        Autonomous<br>
+        <span class="gradient-text">Lead Intelligence</span><br>
+        Engine
+    </h1>
+
+    <p class="subtitle">
+        Lakshya.AI deploys autonomous AI agents that scrape Reddit, Twitter & LinkedIn in real-time, 
+        qualify leads with Gemini AI, and auto-generate personalized outreach — all while you sleep.
+    </p>
+
+    <div class="hero-cta-group">
+        <a href="/login" class="btn-primary-lg">⚡ Access Admin Console</a>
+        <a href="#features" class="btn-outline-lg">Explore Platform ↓</a>
+    </div>
+
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <div class="hero-stat-value" id="counter-leads">0</div>
+            <div class="hero-stat-label">Leads Discovered</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-value" id="counter-platforms">3</div>
+            <div class="hero-stat-label">Platforms Scraped</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-value" id="counter-agents">6</div>
+            <div class="hero-stat-label">AI Agents Active</div>
+        </div>
+        <div class="hero-stat">
+            <div class="hero-stat-value">99%</div>
+            <div class="hero-stat-label">Uptime SLA</div>
+        </div>
+    </div>
+</section>
+
+<hr class="neon-hr">
+
+<!-- ======================================
+     FEATURES SECTION
+     ====================================== -->
+<section class="section" id="features">
+    <div class="section-header reveal">
+        <span class="section-tag">🔥 Core Modules</span>
+        <h2 class="section-title">Everything You Need to <span class="gradient-text">Dominate</span></h2>
+        <p class="section-subtitle">10 integrated modules powering the entire lead-to-revenue pipeline, from discovery to conversion.</p>
+    </div>
+
+    <div class="features-grid">
+
+        <!-- 1. Command Dashboard -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--cp-neon-blue);">📊</div>
+            <h3>Command Dashboard</h3>
+            <p>Real-time overview of total leads, qualified leads, conversion rates, active keywords, and active scraper bots. Features a 7-day discovery volume line chart and per-platform lead distribution bars for Reddit, Twitter & LinkedIn.</p>
+            <span class="feature-tag" style="background: rgba(99, 102, 241, 0.1); color: var(--cp-neon-blue);">Live Analytics</span>
+        </div>
+
+        <!-- 2. VM Scraper System -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(6, 182, 212, 0.1); color: var(--cp-neon-cyan);">🕷️</div>
+            <h3>VM Scraper Engine</h3>
+            <p>Google Cloud VM crawler instances running Python Flask API (port 5000). Real-time VM status & uptime monitoring, force-trigger manual scrapes, and auto-crawl on 30-second daemon cycles across Reddit RSS, DuckDuckGo indices, and live APIs.</p>
+            <span class="feature-tag" style="background: rgba(6, 182, 212, 0.1); color: var(--cp-neon-cyan);">Python + Flask</span>
+        </div>
+
+        <!-- 3. CRM Kanban Board -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(168, 85, 247, 0.1); color: var(--cp-neon-purple);">🎯</div>
+            <h3>Lakshya Target Board (CRM)</h3>
+            <p>5-column Kanban pipeline: New → Contacted → Qualified → Negotiation → Closed. Drag-drop cards with intent scores (0–100), AI-generated reply drafts, meeting scheduler, conversation log, and one-click status updates.</p>
+            <span class="feature-tag" style="background: rgba(168, 85, 247, 0.1); color: var(--cp-neon-purple);">Kanban Pipeline</span>
+        </div>
+
+        <!-- 4. AI Marketer / Creative Generator -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(244, 114, 182, 0.1); color: var(--cp-neon-pink);">🎨</div>
+            <h3>AI Marketer & Creative Builder</h3>
+            <p>Gemini-powered content engine with 3 generation modes: Social Post Suite (captions + hashtags), Growth Suite (blog outlines + email sequences), and Ad Campaign Suite (headlines + CTAs). Includes live mock post preview cards and one-click campaign launch with auto-queued image generation via Selenium.</p>
+            <span class="feature-tag" style="background: rgba(244, 114, 182, 0.1); color: var(--cp-neon-pink);">Gemini AI</span>
+        </div>
+
+        <!-- 5. AI Agents Control Center -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(52, 211, 153, 0.1); color: var(--cp-neon-green);">🤖</div>
+            <h3>Autonomous AI Agents</h3>
+            <p>6 specialized agents: LeadHunterAgent, EmailAgent, WhatsAppAgent, LinkedInAgent, AdCreativeAgent, and SEOAgent. Each has toggle on/off, live task enqueue, execution logs, visitor stream monitoring, and a real-time RDP console with AJAX JSON polling.</p>
+            <span class="feature-tag" style="background: rgba(52, 211, 153, 0.1); color: var(--cp-neon-green);">Autonomous Ops</span>
+        </div>
+
+        <!-- 6. Economics & Profit Planner -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(251, 113, 133, 0.1); color: var(--cp-neon-red);">📈</div>
+            <h3>Economics & Profit Planner</h3>
+            <p>Live MRR tracking, OPEX breakdown (salaries, VM hosting, Gemini API fees, ad spend), CAC vs LTV ratio analytics (25.6x), burn rate calculations, runway projections, and a 3-scenario profitability matrix with break-even client thresholds.</p>
+            <span class="feature-tag" style="background: rgba(251, 113, 133, 0.1); color: var(--cp-neon-red);">SaaS Metrics</span>
+        </div>
+
+        <!-- 7. Project Management -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--cp-neon-blue);">📂</div>
+            <h3>Project & Keyword Manager</h3>
+            <p>Multi-project workspace with CRUD operations. Active/paused toggle per project. Keyword campaign tracker with real-time scrape timestamps, project-scoped keyword targeting, and bulk keyword operations for tracking search queries across all platforms.</p>
+            <span class="feature-tag" style="background: rgba(99, 102, 241, 0.1); color: var(--cp-neon-blue);">Campaign Ops</span>
+        </div>
+
+        <!-- 8. Client Portal & Impersonation -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(6, 182, 212, 0.1); color: var(--cp-neon-cyan);">👥</div>
+            <h3>Client Manager & Impersonation</h3>
+            <p>Full client directory with subscription tiers (Starter / Pro), credit usage tracking, NSFW content penalty system, and admin impersonation mode — login as any client to preview their dashboard, AI creative builder access, and campaign outbox in real-time.</p>
+            <span class="feature-tag" style="background: rgba(6, 182, 212, 0.1); color: var(--cp-neon-cyan);">Multi-Tenant</span>
+        </div>
+
+        <!-- 9. Billing & Subscriptions -->
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(168, 85, 247, 0.1); color: var(--cp-neon-purple);">💳</div>
+            <h3>Billing & Subscription Engine</h3>
+            <p>Tiered subscription model (Starter ₹1,499 / Pro ₹4,999). Quota tracking for monthly leads, daily scrapes, and keyword limits with visual progress bars. Invoice history table with downloadable PDF receipts and billing cycle management.</p>
+            <span class="feature-tag" style="background: rgba(168, 85, 247, 0.1); color: var(--cp-neon-purple);">Revenue Model</span>
+        </div>
+
+    </div>
+</section>
+
+<hr class="neon-hr">
+
+<!-- ======================================
+     DASHBOARD PREVIEW SECTION
+     ====================================== -->
+<section class="section" id="dashboard">
+    <div class="section-header reveal">
+        <span class="section-tag">🖥️ Dashboard Preview</span>
+        <h2 class="section-title">Your <span class="gradient-text">Command Center</span></h2>
+        <p class="section-subtitle">Real-time lead intelligence with VM status, notifications, audit trails, and economics planner — all in one glance.</p>
+    </div>
+
+    <div class="dashboard-preview reveal">
+        <div class="preview-frame">
+            <div class="preview-topbar">
+                <div class="preview-dot" style="background: #fb7185;"></div>
+                <div class="preview-dot" style="background: #fbbf24;"></div>
+                <div class="preview-dot" style="background: var(--cp-neon-green);"></div>
+                <span style="margin-left: 1rem; font-size: 0.8rem; color: var(--cp-text-muted); font-family: 'JetBrains Mono', monospace;">lakshya.ai/admin/dashboard</span>
+                <span style="margin-left: auto; padding: 0.3rem 0.75rem; background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.3); border-radius: 8px; font-size: 0.7rem; color: var(--cp-neon-green); font-weight: 700;">VM: ACTIVE ● Uptime 04:32:15</span>
+            </div>
+
+            <div class="preview-stats-row">
+                <div class="preview-stat-card">
+                    <span class="psc-value" style="color: var(--cp-neon-blue);">247</span>
+                    <span class="psc-label">Total Leads Found</span>
+                </div>
+                <div class="preview-stat-card">
+                    <span class="psc-value" style="color: var(--cp-neon-green);">68%</span>
+                    <span class="psc-label">Conversion Rate</span>
+                </div>
+                <div class="preview-stat-card">
+                    <span class="psc-value" style="color: var(--cp-neon-purple);">12</span>
+                    <span class="psc-label">Active Keywords</span>
+                </div>
+                <div class="preview-stat-card">
+                    <span class="psc-value" style="color: var(--cp-neon-cyan);">5</span>
+                    <span class="psc-label">Active Scrapers</span>
+                </div>
+            </div>
+
+            <div class="preview-charts-row">
+                <div class="preview-chart-card">
+                    <h4>📈 Discovery Volume (Last 7 Days)</h4>
+                    <div class="chart-bars">
+                        <div class="chart-bar" style="height: 35%; background: var(--cp-neon-blue); animation-delay: 0.1s;"></div>
+                        <div class="chart-bar" style="height: 55%; background: var(--cp-neon-blue); animation-delay: 0.2s;"></div>
+                        <div class="chart-bar" style="height: 40%; background: var(--cp-neon-blue); animation-delay: 0.3s;"></div>
+                        <div class="chart-bar" style="height: 70%; background: var(--cp-neon-purple); animation-delay: 0.4s;"></div>
+                        <div class="chart-bar" style="height: 85%; background: var(--cp-neon-purple); animation-delay: 0.5s;"></div>
+                        <div class="chart-bar" style="height: 60%; background: var(--cp-neon-cyan); animation-delay: 0.6s;"></div>
+                        <div class="chart-bar" style="height: 95%; background: var(--cp-neon-green); animation-delay: 0.7s;"></div>
+                    </div>
+                </div>
+
+                <div class="preview-chart-card">
+                    <h4>🌐 Platform Distribution</h4>
+                    <div class="platform-row">
+                        <div class="platform-item">
+                            <span>👽 Reddit</span>
+                            <div class="platform-bar-track">
+                                <div class="platform-bar-fill" style="width: 45%; background: #ff5722; animation-delay: 0.5s;"></div>
+                            </div>
+                        </div>
+                        <div class="platform-item">
+                            <span>🐦 Twitter/X</span>
+                            <div class="platform-bar-track">
+                                <div class="platform-bar-fill" style="width: 35%; background: #1da1f2; animation-delay: 0.7s;"></div>
+                            </div>
+                        </div>
+                        <div class="platform-item">
+                            <span>💼 LinkedIn</span>
+                            <div class="platform-bar-track">
+                                <div class="platform-bar-fill" style="width: 20%; background: #0077b5; animation-delay: 0.9s;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="neon-hr">
+
+<!-- ======================================
+     AI AGENTS SECTION
+     ====================================== -->
+<section class="section" id="agents">
+    <div class="section-header reveal">
+        <span class="section-tag">🤖 AI Agent Fleet</span>
+        <h2 class="section-title">Meet Your <span class="gradient-text">Autonomous Agents</span></h2>
+        <p class="section-subtitle">Six specialized AI agents working in parallel — scraping, qualifying, emailing, messaging, posting, and optimizing 24/7.</p>
+    </div>
+
+    <div class="agents-grid">
+        <div class="agent-card reveal">
+            <div class="agent-avatar" style="background: rgba(99, 102, 241, 0.15);">
+                🕵️
+                <div class="status-ring" style="border-color: var(--cp-neon-green);"></div>
+            </div>
+            <h3>LeadHunter Agent</h3>
+            <p>Autonomously crawls Reddit, Twitter, and LinkedIn using keyword campaigns. Scrapes posts via RSS feeds, DuckDuckGo indices, and live APIs. Qualifies leads with Gemini NLP scoring (0–100 intent score).</p>
+        </div>
+        <div class="agent-card reveal">
+            <div class="agent-avatar" style="background: rgba(6, 182, 212, 0.15);">
+                📧
+                <div class="status-ring" style="border-color: var(--cp-neon-cyan);"></div>
+            </div>
+            <h3>Email Agent</h3>
+            <p>Generates personalized cold pitch emails using Gemini AI with configurable tone (Professional, Casual, Aggressive). Dispatches through SMTP with full logging to the email_logs database. Tracks delivery status.</p>
+        </div>
+        <div class="agent-card reveal">
+            <div class="agent-avatar" style="background: rgba(52, 211, 153, 0.15);">
+                💬
+                <div class="status-ring" style="border-color: var(--cp-neon-green);"></div>
+            </div>
+            <h3>WhatsApp Agent</h3>
+            <p>Sends targeted outreach via the Meta Business WhatsApp API. Validates phone numbers, structures API packets, logs delivery status. Links to project-specific leads for personalized messaging sequences.</p>
+        </div>
+        <div class="agent-card reveal">
+            <div class="agent-avatar" style="background: rgba(168, 85, 247, 0.15);">
+                💼
+                <div class="status-ring" style="border-color: var(--cp-neon-purple);"></div>
+            </div>
+            <h3>LinkedIn Agent</h3>
+            <p>Acquires proxy session tokens, visits target profiles, performs automated connection requests. Sends InMail pitches with personalized copy. Logs all LinkedIn engagement activity and tracks acceptance rates.</p>
+        </div>
+        <div class="agent-card reveal">
+            <div class="agent-avatar" style="background: rgba(244, 114, 182, 0.15);">
+                🎨
+                <div class="status-ring" style="border-color: var(--cp-neon-pink);"></div>
+            </div>
+            <h3>AdCreative Agent</h3>
+            <p>Uses headless Chrome (Selenium) to search and download ad creative images from Lexica. Queues image generation tasks via the Python worker daemon with automatic retry logic (max 3 attempts). Auto-posts to social platforms.</p>
+        </div>
+        <div class="agent-card reveal">
+            <div class="agent-avatar" style="background: rgba(251, 113, 133, 0.15);">
+                🔍
+                <div class="status-ring" style="border-color: var(--cp-neon-red);"></div>
+            </div>
+            <h3>SEO Agent</h3>
+            <p>Performs technical SEO audits on target domains, analyzes page speed metrics, generates optimization blueprints. Creates keyword-rich blog post outlines and meta tag suggestions for organic reach growth.</p>
+        </div>
+    </div>
+</section>
+
+<hr class="neon-hr">
+
+<!-- ======================================
+     LIVE TERMINAL FEED
+     ====================================== -->
+<section class="section" id="terminal">
+    <div class="section-header reveal">
+        <span class="section-tag">🖥️ Live Console</span>
+        <h2 class="section-title">Real-Time <span class="gradient-text">Execution Feed</span></h2>
+        <p class="section-subtitle">Watch the VM agent runner discover, qualify, and register leads autonomously in real time.</p>
+    </div>
+
+    <div class="terminal-section reveal">
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="preview-dot" style="background: #fb7185; width: 10px; height: 10px;"></div>
+                <div class="preview-dot" style="background: #fbbf24; width: 10px; height: 10px;"></div>
+                <div class="preview-dot" style="background: var(--cp-neon-green); width: 10px; height: 10px;"></div>
+                <span style="margin-left: 0.75rem; font-size: 0.75rem; color: var(--cp-text-muted); font-family: 'JetBrains Mono', monospace;">vm-agent@lakshya:~/runner.py</span>
+            </div>
+            <div class="terminal-body" id="terminal-output">
+                <!-- Lines injected by JS -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<hr class="neon-hr">
+
+<!-- ======================================
+     ADDITIONAL FEATURES: NOTIFICATIONS, AUDIT, SETTINGS
+     ====================================== -->
+<section class="section" id="more-features">
+    <div class="section-header reveal">
+        <span class="section-tag">⚙️ Platform Infrastructure</span>
+        <h2 class="section-title">Built for <span class="gradient-text">Production Scale</span></h2>
+        <p class="section-subtitle">Enterprise-grade infrastructure modules powering notifications, auditing, security, and platform accounts.</p>
+    </div>
+
+    <div class="features-grid">
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24;">🔔</div>
+            <h3>System Notifications</h3>
+            <p>Real-time notification feed with read/unread states, blue pulse indicators for new alerts, one-click mark-all-read, and per-user notification scoping with admin broadcast support.</p>
+            <span class="feature-tag" style="background: rgba(251, 191, 36, 0.1); color: #fbbf24;">Real-Time</span>
+        </div>
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(99, 102, 241, 0.1); color: var(--cp-neon-blue);">📋</div>
+            <h3>Audit Log Trail</h3>
+            <p>Complete audit trail of every action — project switches, lead status changes, campaign launches, keyword operations. Logs IP address, target table, user ID, and timestamps for full compliance and forensic analysis.</p>
+            <span class="feature-tag" style="background: rgba(99, 102, 241, 0.1); color: var(--cp-neon-blue);">Compliance</span>
+        </div>
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(52, 211, 153, 0.1); color: var(--cp-neon-green);">⚙️</div>
+            <h3>Agent Settings & Platform Accounts</h3>
+            <p>Configure platform account credentials for Reddit, Twitter, LinkedIn scrapers. Toggle scraper bots active/paused, set API keys, proxy configurations. Account settings with profile name and email management.</p>
+            <span class="feature-tag" style="background: rgba(52, 211, 153, 0.1); color: var(--cp-neon-green);">Config</span>
+        </div>
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(244, 114, 182, 0.1); color: var(--cp-neon-pink);">🛡️</div>
+            <h3>NSFW Security Shield</h3>
+            <p>Content moderation pipeline that detects and blocks NSFW content generation attempts. Applies credit penalties to violating accounts, tracks violations in audit logs, and provides admin-visible violation counters on the dashboard.</p>
+            <span class="feature-tag" style="background: rgba(244, 114, 182, 0.1); color: var(--cp-neon-pink);">Security</span>
+        </div>
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(6, 182, 212, 0.1); color: var(--cp-neon-cyan);">📡</div>
+            <h3>Live RDP Console Stream</h3>
+            <p>AJAX JSON polling console that streams real-time execution logs from the VM agent. Click any agent task to inspect output. Toggle live feed on/off with visual status indicators and auto-scroll to latest entries.</p>
+            <span class="feature-tag" style="background: rgba(6, 182, 212, 0.1); color: var(--cp-neon-cyan);">Live Stream</span>
+        </div>
+        <div class="feature-card reveal">
+            <div class="feature-icon" style="background: rgba(168, 85, 247, 0.1); color: var(--cp-neon-purple);">🏗️</div>
+            <h3>Tech Stack</h3>
+            <p>Laravel 11 backend with Blade templating, MySQL/MariaDB database, Python Flask VM agent API, Selenium headless Chrome automation, Gemini 2.5 Flash AI model, Vite asset bundling, and Tailwind CSS styling.</p>
+            <span class="feature-tag" style="background: rgba(168, 85, 247, 0.1); color: var(--cp-neon-purple);">Full Stack</span>
+        </div>
+    </div>
+</section>
+
+<hr class="neon-hr">
+
+<!-- ======================================
+     PRICING SECTION
+     ====================================== -->
+<section class="section" id="pricing">
+    <div class="section-header reveal">
+        <span class="section-tag">💰 Pricing</span>
+        <h2 class="section-title">Choose Your <span class="gradient-text">Tier</span></h2>
+        <p class="section-subtitle">Start free, scale to Pro. All plans include AI agents, CRM, and the creative builder.</p>
+    </div>
+
+    <div class="pricing-grid">
+        <div class="pricing-card reveal">
+            <div class="pricing-tier" style="color: var(--cp-neon-cyan);">Free Trial</div>
+            <div class="pricing-price" style="color: white;">₹0</div>
+            <div class="pricing-period">7 days · No credit card</div>
+            <ul class="pricing-features">
+                <li><span class="check">✓</span> 10 leads / month</li>
+                <li><span class="check">✓</span> 3 keyword campaigns</li>
+                <li><span class="check">✓</span> AI Marketer (limited)</li>
+                <li><span class="check">✓</span> Dashboard analytics</li>
+                <li><span class="check">✓</span> Single platform scraping</li>
+            </ul>
+            <button class="btn-pricing outline">Start Free Trial</button>
+        </div>
+
+        <div class="pricing-card featured reveal">
+            <div class="pricing-tier" style="color: var(--cp-neon-purple);">⭐ Starter</div>
+            <div class="pricing-price" style="color: white;"><span class="currency">₹</span>1,499</div>
+            <div class="pricing-period">per month · billed monthly</div>
+            <ul class="pricing-features">
+                <li><span class="check">✓</span> 100 leads / month</li>
+                <li><span class="check">✓</span> 10 keyword campaigns</li>
+                <li><span class="check">✓</span> Full AI Marketer suite</li>
+                <li><span class="check">✓</span> CRM Kanban board</li>
+                <li><span class="check">✓</span> 3 platform scraping</li>
+                <li><span class="check">✓</span> Email + WhatsApp agents</li>
+                <li><span class="check">✓</span> 1000 daily scrapes</li>
+            </ul>
+            <button class="btn-pricing primary">Get Started →</button>
+        </div>
+
+        <div class="pricing-card reveal">
+            <div class="pricing-tier" style="color: var(--cp-neon-green);">Pro</div>
+            <div class="pricing-price" style="color: white;"><span class="currency">₹</span>4,999</div>
+            <div class="pricing-period">per month · billed monthly</div>
+            <ul class="pricing-features">
+                <li><span class="check">✓</span> Unlimited leads</li>
+                <li><span class="check">✓</span> Unlimited keywords</li>
+                <li><span class="check">✓</span> All 6 AI agents</li>
+                <li><span class="check">✓</span> Priority VM instances</li>
+                <li><span class="check">✓</span> White-label client portal</li>
+                <li><span class="check">✓</span> Economics & profit planner</li>
+                <li><span class="check">✓</span> Dedicated support</li>
+            </ul>
+            <button class="btn-pricing outline">Upgrade to Pro</button>
+        </div>
+    </div>
+</section>
+
+<hr class="neon-hr">
+
+<!-- ======================================
+     FINAL CTA
+     ====================================== -->
+<section class="cta-section">
+    <div class="reveal">
+        <h2 style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 1rem; letter-spacing: -1px;">
+            Ready to Deploy Your<br><span class="gradient-text">AI Lead Army?</span>
+        </h2>
+        <p style="color: var(--cp-text-muted); font-size: 1.05rem; max-width: 500px; margin: 0 auto 2rem;">
+            Join the autonomous intelligence revolution. Your agents are already waiting.
+        </p>
+        <a href="/login" class="btn-primary-lg" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            ⚡ Launch Console Now
+        </a>
+    </div>
+</section>
+
+<!-- ======================================
+     FOOTER
+     ====================================== -->
+<footer class="footer">
+    <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#agents">AI Agents</a>
+        <a href="#pricing">Pricing</a>
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    </div>
+    <p>© 2026 Lakshya.AI — Autonomous Lead Intelligence Platform. Built with Laravel, Python, Gemini AI & ❤️</p>
+</footer>
+
+<!-- ======================================
+     JAVASCRIPT
+     ====================================== -->
+<script>
+    // ===== Scroll Reveal =====
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => entry.target.classList.add('visible'), i * 80);
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    // ===== Navbar Scroll Effect =====
+    window.addEventListener('scroll', () => {
+        document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // ===== Floating Particles =====
+    (function createParticles() {
+        const container = document.getElementById('particles');
+        const colors = ['#6366f1', '#a855f7', '#06b6d4', '#34d399', '#f472b6'];
+        for (let i = 0; i < 40; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 4 + 1;
+            p.style.cssText = `
+                width: ${size}px; height: ${size}px;
+                left: ${Math.random() * 100}%;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                animation-duration: ${Math.random() * 15 + 10}s;
+                animation-delay: ${Math.random() * 10}s;
+                box-shadow: 0 0 ${size * 3}px ${colors[Math.floor(Math.random() * colors.length)]};
+            `;
+            container.appendChild(p);
+        }
+    })();
+
+    // ===== Counter Animation =====
+    function animateCounter(id, target, suffix = '') {
+        const el = document.getElementById(id);
+        if (!el) return;
+        let current = 0;
+        const step = Math.ceil(target / 60);
+        const timer = setInterval(() => {
+            current += step;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            el.textContent = current.toLocaleString() + suffix;
+        }, 30);
+    }
+
+    const heroObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounter('counter-leads', 247);
+                animateCounter('counter-platforms', 3);
+                animateCounter('counter-agents', 6);
+                heroObserver.unobserve(entry.target);
+            }
+        });
+    });
+    heroObserver.observe(document.getElementById('hero'));
+
+    // ===== Terminal Simulation =====
+    const terminalLines = [
+        { text: '==========================================================', cls: 't-cyan' },
+        { text: '     🎯 LAKSHYA AI AGENT RUNNER - BACKGROUND SERVICE      ', cls: 't-purple' },
+        { text: '==========================================================', cls: 't-cyan' },
+        { text: '', cls: '' },
+        { text: '🔍 [RUNNER] Querying active search campaigns from database...', cls: 't-yellow' },
+        { text: '📈 [RUNNER] Found 4 active tracking keywords.', cls: 't-cyan' },
+        { text: '', cls: '' },
+        { text: '⚡ --- Processing Keyword Campaign: \'need custom software development\' ---', cls: 't-white' },
+        { text: '[SCRAPER] Querying live Reddit RSS feed for query: \'need custom software development\'...', cls: 't-muted' },
+        { text: '[SCRAPER] Successfully fetched 25 posts from Reddit RSS.', cls: 't-green' },
+        { text: '[AI-ADVISOR] Running heuristic NLP classifier...', cls: 't-purple' },
+        { text: '✔ [RUNNER] Lead Qualified! Score: 92/100 | Category: High Intent - Direct request', cls: 't-green' },
+        { text: '🎉 [SUCCESS] Lead registered in database with ID: 142', cls: 't-green' },
+        { text: '', cls: '' },
+        { text: '[SCRAPER] Initializing browser profile for twitter (DuckDuckGo Search)...', cls: 't-muted' },
+        { text: '[SCRAPER] Successfully parsed 8 live posts from DuckDuckGo for twitter.com.', cls: 't-green' },
+        { text: '[AI-ADVISOR] Running heuristic NLP classifier...', cls: 't-purple' },
+        { text: '⚠ [RUNNER] Lead Score: 45/100 | Category: Low Intent - General advice request', cls: 't-yellow' },
+        { text: '❌ [RUNNER] Post by @tech_enthusiast skipped (score 45 below threshold).', cls: 't-red' },
+        { text: '', cls: '' },
+        { text: '[SCRAPER] Initializing browser profile for linkedin (DuckDuckGo Search)...', cls: 't-muted' },
+        { text: '[SCRAPER] Scraped 1 matched post from linkedin by user john_doe_marketing (Simulated)', cls: 't-green' },
+        { text: '[AI-ADVISOR] Running heuristic NLP classifier...', cls: 't-purple' },
+        { text: '✔ [RUNNER] Lead Qualified! Score: 99/100 | Category: High Intent - Direct request', cls: 't-green' },
+        { text: '🎉 [SUCCESS] Lead registered in database with ID: 143', cls: 't-green' },
+        { text: '', cls: '' },
+        { text: '💤 [RUNNER] Sleep for 30 seconds before next crawl cycle...', cls: 't-cyan' },
+        { text: '', cls: '' },
+        { text: '⚡ [AGENT WORKER] Claimed task ID 24 of type \'EmailAgent\'...', cls: 't-yellow' },
+        { text: ' └── [INFO] Resolving target lead profile details for email: founder@targetsaas.com', cls: 't-muted' },
+        { text: ' └── [INFO] Invoking Gemini AI model: gemini-2.5-flash with outreach parameters (Tone: Professional)', cls: 't-muted' },
+        { text: ' └── [INFO] Personalized cold pitch copy successfully compiled.', cls: 't-muted' },
+        { text: ' └── [INFO] SMTP transmission: 250 OK. Outbound transaction saved to database email_logs.', cls: 't-green' },
+        { text: '✔ [SUCCESS] Task ID 24 successfully processed and committed.', cls: 't-green' },
+    ];
+
+    function runTerminal() {
+        const container = document.getElementById('terminal-output');
+        container.innerHTML = '';
+        let i = 0;
+        function addLine() {
+            if (i >= terminalLines.length) {
+                setTimeout(runTerminal, 3000);
+                return;
+            }
+            const line = terminalLines[i];
+            const div = document.createElement('div');
+            div.className = `terminal-line ${line.cls}`;
+            div.textContent = line.text;
+            div.style.animationDelay = `${i * 0.05}s`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+            i++;
+            setTimeout(addLine, 80);
+        }
+        addLine();
+    }
+
+    const terminalObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                runTerminal();
+                terminalObserver.unobserve(entry.target);
+            }
+        });
+    });
+    terminalObserver.observe(document.getElementById('terminal'));
+</script>
+
+</body>
+</html>

@@ -305,7 +305,7 @@ Output must be in JSON format matching the schema.";
 
         // Submit the image generation task to the Python worker queue API
         try {
-            Http::timeout(3)->post('http://127.0.0.1:5000/queue-task', [
+            Http::timeout(3)->post(config('admin.vm.base_url') . '/queue-task', [
                 'client_id' => $this->getAuthUserId(),
                 'task_type' => 'generate_image',
                 'payload' => [

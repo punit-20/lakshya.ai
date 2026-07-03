@@ -3,13 +3,13 @@ import path from 'path';
 import fs from 'fs';
 
 (async () => {
-  const browser = await chromium.launch({ headless: false });
+  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: 1280, height: 800 }
   });
   const page = await context.newPage();
 
-  const screenshotDir = 'C:/Users/HP/.gemini/antigravity-ide/brain/b3c84de8-a8b0-4019-959f-1f5ae9fd7984/scratch/screenshots';
+  const screenshotDir = 'C:/Users/HP/.gemini/antigravity-ide/brain/15e9d4c8-38f4-4409-9960-1a78f0af72cd/scratch/screenshots';
   if (!fs.existsSync(screenshotDir)) {
     fs.mkdirSync(screenshotDir, { recursive: true });
   }

@@ -105,7 +105,7 @@ class DashboardController extends Controller
         $vmUptime = 'N/A';
         $vmStats = null;
         try {
-            $vmResponse = Http::timeout(1)->get('http://127.0.0.1:5000/status');
+            $vmResponse = Http::timeout(1)->get(config('admin.vm.base_url') . '/status');
             if ($vmResponse->successful()) {
                 $vmData = $vmResponse->json();
                 $vmStatus = 'Active';
@@ -292,7 +292,7 @@ class DashboardController extends Controller
     public function triggerVmCrawl(Request $request)
     {
         try {
-            $response = Http::timeout(60)->post('http://127.0.0.1:5000/trigger');
+            $response = Http::timeout(60)->post(config('admin.vm.base_url') . '/trigger');
             if ($response->successful()) {
                 return response()->json($response->json());
             }

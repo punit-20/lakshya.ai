@@ -31,3 +31,6 @@ __pycache__/
 venv/
 ENV/
 env/
+
+# E2E test results
+/test-results/
