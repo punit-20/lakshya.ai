@@ -340,14 +340,23 @@ php artisan migrate --seed
 
 ### 5️⃣ Start Development Server
 
-```bash
-# Option A: Start everything at once (recommended)
-composer dev
+We have provided a unified runner script that launches all 7 required PHP, Python, and frontend Vite servers/workers concurrently, handles browser auto-opening when ready, and exits cleanly upon pressing `Ctrl+C`.
 
-# Option B: Start services individually
-php artisan serve          # Laravel backend → http://localhost:8000
-npm run dev                # Vite frontend assets
-python vm_agent/runner.py  # Crawler daemon (separate terminal)
+```bash
+# Option A: Start everything at once (Recommended - Unified Project Runner)
+python run_project.py
+
+# Or use the platform-specific wrapper scripts:
+.\run_project.bat   # For Windows CMD / PowerShell
+./run_project.sh    # For Linux / Android Termux (run 'chmod +x run_project.sh' first)
+
+# Option B: Start services individually (Separate Terminals)
+php artisan serve               # Laravel backend web server → http://localhost:8000
+npm run dev                     # Vite frontend assets bundler
+python vm_agent/api.py          # VM Agent Flask API server → http://localhost:5000
+python vm_agent/worker.py       # VM Agent Selenium automation worker daemon
+python vm_agent/agent_worker.py    # VM Agent Task execution worker daemon
+python vm_agent/runner.py       # VM Agent Lead Crawler background scheduler daemon
 ```
 
 ### 6️⃣ Access the Dashboard
@@ -455,12 +464,17 @@ Lakshya includes a built-in SaaS economics dashboard tracking real P&L:
 - [x] Multi-tenant client directories and admin simulation impersonation mode
 - [x] **AI Agents Portal** (Visitor tracking stream, WhatsApp templates, LinkedIn logs, Queue terminal consoles)
 - [x] 🌐 **Production Database Migration**: Configured robust MySQL integration (migrated from SQLite)
+- [x] 🚀 **Unified Cross-Platform Multi-Service Runner**: Developed `run_project.py` script orchestrating Laravel server, queue listener, Vite bundler, and all 4 Python VM Agent services concurrently with console color-coding and automatic browser launching.
+- [x] 📁 **File System Reorganization**: Reorganized file structure, cleaned duplicate directories/assets, and consolidated tests into standard `tests/e2e/` and `vm_agent/tests/` folders.
 
 ### Uncompleted Production-Ready Roadmap Tasks
 - [ ] 🔐 **SMTP/OAuth Mail Warmup**: Implement real Gmail/Outlook APIs for secure automated outbound sequences.
 - [ ] 💬 **Meta WhatsApp Business API Integration**: Configure official Meta gateway tokens and message template templates.
 - [ ] 💼 **Production LinkedIn Outbox Session Manager**: Integrate cookie rotation or official LinkedIn API pipelines for automated messaging.
 - [ ] ⚙️ **Process Daemon Manager**: Set up PM2 or Systemd service configuration for `agent_worker.py` daemon persistence in production.
+- [ ] 🤖 **Advanced AI Agent Collaboration**: Enable round-robin task dispatching and memory sharing between the different AI workers (`agent_worker.py`).
+- [ ] 📈 **Predictive SaaS Economics Model**: Add forecasting models for MRR/ARR churn and growth predictions using historical data.
+- [ ] 🔍 **Headless Browser Pool Scaling**: Implement dynamic web driver pooling/recycling in `worker.py` to prevent resource leaks under heavy load.
 - [ ] 🔗 **Webhooks & Instant Slack/Discord Notifications** for new high-intent leads.
 - [ ] 📱 **Mobile-responsive PWA** interface for on-the-go CRM updates.
 - [ ] 🔒 **Full Auth Multi-Factor Authentication (MFA)** for client users.
